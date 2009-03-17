@@ -29,6 +29,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import com.iplanet.sso.SSOToken;
+
 /**
  * Filter implementation that replace Alfresco's default AuthenticationFilter in
  * order to provide authentication in OpenSSO
@@ -53,11 +55,15 @@ public class AlfrescoOpenSSOFilter implements Filter {
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		HttpSession httpSession = httpRequest.getSession();
 		boolean doChain = true;
-		if (getOpenSSOClient().isRequestAuthenticated(httpRequest)) {
-			String principal = getOpenSSOClient().getPrincipal();
+		SSOToken token = getOpenSSOClient().createTokenFrom(httpRequest);
+		if (token != null) {
+			String principal = getOpenSSOClient().getPrincipal(token);
+			String email = getOpenSSOClient().getUserAttribute(OpenSSOClientAdapter.ATTR_EMAIL, token);
+			String fullName = getOpenSSOClient().getUserAttribute(OpenSSOClientAdapter.ATTR_FULL_NAME, token);
+			String firstName = getOpenSSOClient().getUserAttribute(OpenSSOClientAdapter.ATTR_LAST_NAME, token);
 			httpSession.setAttribute("OPENSSO_PRINCIPAL", principal);
 			if (!getAlfrescoFacade().existUser(principal)) {
-				getAlfrescoFacade().createUser(principal);
+				getAlfrescoFacade().createUser(principal, email, firstName, fullName);
 			}
 			getAlfrescoFacade().setAuthenticatedUser(httpRequest, httpSession, principal);
 		} else {

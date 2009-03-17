@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.classextension.EasyMock.createMock;
 import static org.easymock.classextension.EasyMock.makeThreadSafe;
 import static org.easymock.classextension.EasyMock.replay;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -42,6 +43,8 @@ import org.mortbay.jetty.testing.ServletTester;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
+
+import com.iplanet.sso.SSOToken;
 
 public class AlfrescoOpenSSOFilterTest {
 
@@ -68,6 +71,8 @@ public class AlfrescoOpenSSOFilterTest {
 		alfrescoFilter = (AlfrescoOpenSSOFilter) filterHolder.getFilter();
 		alfrescoFilter.setAlfrescoFacade(mockAlfrescoFacade());
 		alfrescoFilter.setOpenSSOClient(mockOpenSSOClient());
+		
+		
 	}
 
 	@After
@@ -77,7 +82,7 @@ public class AlfrescoOpenSSOFilterTest {
 
 	@Test
 	public void shoulDoChainWhenAuthenticated() throws Exception {
-		HttpTester response = doSomePostWithCookie(null);
+		HttpTester response = doSomePostWithCookie("/alfresco/",null);
 		
 		assertEquals(HTTP_OK, response.getStatus());
 		assertTrue(response.getContent().contains("Simple Servlet"));
@@ -89,11 +94,11 @@ public class AlfrescoOpenSSOFilterTest {
 	@Test
 	public void shouldRedirectToOpenSSOWhenNotAuthenticated() throws IOException, Exception {
 		OpenSSOClientAdapter mock = createMock(OpenSSOClientAdapter.class);
-		expect(mock.isRequestAuthenticated((HttpServletRequest) anyObject())).andStubReturn(Boolean.FALSE);
+		expect(mock.createTokenFrom((HttpServletRequest) anyObject())).andStubReturn(null);
 		replay(mock);
 		alfrescoFilter.setOpenSSOClient(mock);
 
-		HttpTester response = doSomePostWithCookie(null);
+		HttpTester response = doSomePostWithCookie("/alfresco/",null);
 
 		assertEquals(HTTP_REDIRECT, response.getStatus());
 		assertTrue(response.getHeader("Location").equals(OPENSSO_LOGIN.concat("?goto=").concat(MOCK_ALFRESCO_URL)));
@@ -107,7 +112,7 @@ public class AlfrescoOpenSSOFilterTest {
 
 	@Test
 	public void shouldCreateUserInAlfresco() throws Exception {
-		doSomePostWithCookie(null);
+		doSomePostWithCookie("/alfresco/",null);
 		assertTrue(alfrescoFilter.getAlfrescoFacade().existUser(USERNAME));
 	}
 
@@ -116,13 +121,15 @@ public class AlfrescoOpenSSOFilterTest {
 	public void testGetOpenSSOLoginURL() {
 		assertEquals(OPENSSO_LOGIN, alfrescoFilter.getOpenSSOLoginURL());
 	}
+	
+	
 
-	private HttpTester doSomePostWithCookie(String setCookie) throws IOException, Exception {
+	private HttpTester doSomePostWithCookie(String URI, String setCookie) throws IOException, Exception {
 		HttpTester request = new HttpTester();
 		HttpTester response = new HttpTester();
 		request.setMethod("GET");
 		request.setHeader("Host", "localhost");
-		request.setURI("/alfresco/");
+		request.setURI(URI);
 		request.setVersion("HTTP/1.1");
 		if (setCookie != null) {
 			request.addHeader("Cookie", setCookie.split(";")[0]);
@@ -132,12 +139,18 @@ public class AlfrescoOpenSSOFilterTest {
 		response.parse(responses);
 		return response;
 	}
+	
+	
+	private SSOToken mockSSOToken() {
+		return createMock(SSOToken.class);
+	}
 
 	private OpenSSOClientAdapter mockOpenSSOClient() {
 		OpenSSOClientAdapter mock = createMock(OpenSSOClientAdapter.class);
 		makeThreadSafe(mock, true);
-		expect(mock.isRequestAuthenticated((HttpServletRequest) anyObject())).andStubReturn(Boolean.TRUE);
-		expect(mock.getPrincipal()).andStubReturn(USERNAME);
+		expect(mock.createTokenFrom((HttpServletRequest) anyObject())).andStubReturn(mockSSOToken());
+		expect(mock.getPrincipal((SSOToken) anyObject())).andStubReturn(USERNAME);
+		expect(mock.getUserAttribute((String)anyObject(),(SSOToken) anyObject())).andStubReturn("attribute");
 		replay(mock);
 		return mock;
 	}
@@ -149,8 +162,9 @@ public class AlfrescoOpenSSOFilterTest {
 
 		AlfrescoFacade mockAlfrescoFacade = new AlfrescoFacade(mockServletContext){
 			public ArrayList<String> users = new ArrayList<String>();
+			
 			@Override
-			protected void createUser(String username) {
+			protected void createUser(String username, String email, String firstName, String lastName) {
 				users.add(username);
 			}
 			@Override
@@ -160,7 +174,9 @@ public class AlfrescoOpenSSOFilterTest {
 			
 			@Override
 			protected void setAuthenticatedUser(HttpServletRequest req, HttpSession httpSess, String userName) {
-				populateSession(httpSess, new User(userName,"ticket", new NodeRef("workspace://SpacesStore/386f7ece-4127-42b5-8543-3de2e2a20d7e")));
+				NodeRef nodeRef = new NodeRef("workspace://SpacesStore/386f7ece-4127-42b5-8543-3de2e2a20d7e");
+				User user = new User(userName,"ticket", nodeRef);
+				populateSession(httpSess, user);
 			}
 		
 		};

@@ -114,7 +114,7 @@ public class AlfrescoFacade {
 		httpSess.setAttribute(LoginBean.LOGIN_EXTERNAL_AUTH, Boolean.TRUE);
 	}
 
-	protected void createUser(String username) {
+	protected void createUser(String username, String email, String firstName, String lastName) {
 
 		UserTransaction tx = transactionService.getUserTransaction();
 		try {
@@ -122,8 +122,9 @@ public class AlfrescoFacade {
 			authenticationService.createAuthentication(username, username.toCharArray());
 			HashMap<QName, Serializable> properties = new HashMap<QName, Serializable>();
 			properties.put(ContentModel.PROP_USERNAME, username);
-			properties.put(ContentModel.PROP_FIRSTNAME, username);
-			properties.put(ContentModel.PROP_LASTNAME, username);
+			properties.put(ContentModel.PROP_FIRSTNAME, firstName);
+			properties.put(ContentModel.PROP_LASTNAME, lastName);
+			properties.put(ContentModel.PROP_EMAIL, email);
 			NodeRef newPerson = personService.createPerson(properties);
 			permissionService.setPermission(newPerson, username, permissionService.getAllPermission(), true);
 			authenticationService.setAuthenticationEnabled(username, true);

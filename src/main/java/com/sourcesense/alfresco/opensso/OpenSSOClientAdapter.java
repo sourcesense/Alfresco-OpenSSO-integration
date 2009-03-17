@@ -16,11 +16,16 @@
  */
 package com.sourcesense.alfresco.opensso;
 
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 
 import com.iplanet.sso.SSOException;
 import com.iplanet.sso.SSOToken;
 import com.iplanet.sso.SSOTokenManager;
+import com.sun.identity.idm.IdRepoException;
+import com.sun.identity.idm.IdUtils;
+import com.sun.identity.shared.datastruct.OrderedSet;
 
 
 /**
@@ -29,9 +34,15 @@ import com.iplanet.sso.SSOTokenManager;
  *
  */
 public class OpenSSOClientAdapter {
-
+	
+	public static final String ATTR_UID = "uid";
+	public static final String ATTR_LAST_NAME = "sn";
+	public static final String ATTR_FULL_NAME = "cn";
+	public static final String ATTR_EMAIL = "mail";
+	public static final String ATTR_HOME_ADDRESS= "postaladdress";
+	public static final String ATTR_TELEFONE= "telephonenumber";
+	
 	protected SSOTokenManager tokenManager;
-	private String principal;
 
 	public OpenSSOClientAdapter() {
 		try {
@@ -41,22 +52,45 @@ public class OpenSSOClientAdapter {
 		}
 	}
 
-	public boolean isRequestAuthenticated(HttpServletRequest request) {
-		boolean sessionValid = true;
+	/**
+	 * Tries to create an SSOToken based on the HTTP request
+	 * @param request
+	 * @return The token or null if session not valid
+	 */
+	public SSOToken createTokenFrom(HttpServletRequest request) {
+		SSOToken token = null;
 		try {
-			SSOToken token = tokenManager.createSSOToken(request);
-			sessionValid = tokenManager.isValidToken(token);
+			token = tokenManager.createSSOToken(request);
+			boolean sessionValid = tokenManager.isValidToken(token);
 			if (sessionValid) {
-				principal = token.getProperty("UserId");
+				return token;
 			}
 		} catch (SSOException e) {
 			e.printStackTrace();
-			sessionValid = false;
 		}
-		return sessionValid;
+		return token;
+	}
+	
+	public String getUserAttribute(String attribute, SSOToken token) {
+		String attributeValue = null;
+		try {
+			Set attributeValues = (Set) IdUtils.getIdentity(token).getAttribute(attribute);
+			attributeValue = attributeValues.toArray()[0].toString();
+		} catch (SSOException e) {
+			e.printStackTrace();
+		} catch (IdRepoException e) {
+			e.printStackTrace();
+		}
+		return attributeValue;
 	}
 
-	public String getPrincipal() {
+	public String getPrincipal(SSOToken token) {
+		String principal = null;
+		try {
+			principal = token.getProperty("UserId");
+		} catch (SSOException e) {
+			e.printStackTrace();
+		}
 		return principal;
 	}
 }
