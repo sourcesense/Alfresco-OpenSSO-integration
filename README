@@ -9,10 +9,13 @@
 DEPLOYMENT
 ----------
 
-1. Download the distribution file [1] and OpenSSO client sdk [2]
+1. Build the jar from the sources, or download the latest release of the filter from: 
 
-[1] http://repository.sourcesense.com/nexus/content/repositories/snapshots/com/sourcesense/alfresco/alfresco-opensso/0.1-SNAPSHOT/alfresco-opensso-0.1-20090313.103303-1.jar
-[2] http://repository.sourcesense.com/nexus/content/repositories/thirdparty/com/sun/identity/openssoclientsdk/8.0/openssoclientsdk-8.0.jar
+http://repository.sourcesense.com/nexus/content/groups/public/com/sourcesense/alfresco/alfresco-opensso/
+
+2. Download OpenSSO SDK from
+
+http://repository.sourcesense.com/nexus/content/repositories/thirdparty/com/sun/identity/openssoclientsdk/8.0/openssoclientsdk-8.0.jar
 
 2. Copy both to <Alfresco_Home>/tomcat/webapps/alfresco/WEB-INF/lib
 
@@ -35,8 +38,7 @@ Filter and replace it by the Alfresco-OpenSSO integration filter (changing first
 USAGE
 -----
 
-Accessing Alfresco's home will redirect the browser to OpenSSO login page. After a successful login, openSSO
-will redirect the browser back to Alfresco. The filter will try to search inside Alfresco for the authenticated
-user, and everything will work as if the authentication was made inside Alfresco. 
-The user must be created in Alfresco AND OpenSSO. In order to access alfresco administration, the "admin" user
-must be created in OpenSSO as well.
+Accessing Alfresco's home will redirect the browser to OpenSSO login page. 
+After a successful login, openSSO will redirect the browser back to Alfresco. 
+If user does not exist in Alfresco, it'll be created. 
+In order to access alfresco administration, the "admin" user must be created in OpenSSO as well.
