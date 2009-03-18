@@ -25,6 +25,7 @@ import java.util.Map;
 import org.alfresco.repo.security.authentication.AuthenticationComponent;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.security.AuthenticationService;
+import org.alfresco.service.cmr.security.AuthorityService;
 import org.alfresco.service.cmr.security.PermissionService;
 import org.alfresco.service.cmr.security.PersonService;
 import org.springframework.beans.BeansException;
@@ -47,6 +48,7 @@ public class MockAlfrescoApplicationContext extends GenericWebApplicationContext
 		beans.put("personService", PersonService.class);
 		beans.put("permissionService", PermissionService.class);
 		beans.put("authenticationService", AuthenticationService.class);
+		beans.put("authorityService", AuthorityService.class);
 	}
 
 	@Override

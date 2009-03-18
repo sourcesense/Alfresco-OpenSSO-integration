@@ -17,13 +17,13 @@
 package com.sourcesense.alfresco.opensso;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import javax.transaction.NotSupportedException;
-import javax.transaction.UserTransaction;
 
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.security.authentication.AuthenticationComponent;
@@ -31,6 +31,8 @@ import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.repository.NodeService;
 import org.alfresco.service.cmr.security.AuthenticationService;
+import org.alfresco.service.cmr.security.AuthorityService;
+import org.alfresco.service.cmr.security.AuthorityType;
 import org.alfresco.service.cmr.security.PermissionService;
 import org.alfresco.service.cmr.security.PersonService;
 import org.alfresco.service.namespace.QName;
@@ -42,6 +44,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import com.sourcesense.alfresco.transaction.Transactionable;
+import com.sourcesense.alfresco.transaction.TransactionalHelper;
 
 /**
  * Facade for Alfresco operations, such as create user and groups
@@ -60,53 +65,39 @@ public class AlfrescoFacade {
 	private PersonService personService;
 	private PermissionService permissionService;
 	private AuthenticationService authenticationService;
+	private TransactionalHelper transactionalHelper;
+	private AuthorityService authorityService;
 
 	public AlfrescoFacade(ServletContext servletContext) {
-
 		WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(servletContext);
-
 		ServiceRegistry serviceRegistry = (ServiceRegistry) ctx.getBean(ServiceRegistry.SERVICE_REGISTRY);
-
 		transactionService = serviceRegistry.getTransactionService();
 		nodeService = serviceRegistry.getNodeService();
-
 		authComponent = (AuthenticationComponent) ctx.getBean("AuthenticationComponent");
 		authService = (AuthenticationService) ctx.getBean("AuthenticationService");
 		personService = (PersonService) ctx.getBean("personService");
 		permissionService = (PermissionService) ctx.getBean("permissionService");
 		authenticationService = (AuthenticationService) ctx.getBean("authenticationService");
+		authorityService = (AuthorityService) ctx.getBean("authorityService");
+		
+		transactionalHelper = new TransactionalHelper(transactionService);
 	}
+	
+	
 
-	protected void setAuthenticatedUser(HttpServletRequest req, HttpSession httpSess, String userName) {
+	protected void setAuthenticatedUser(HttpServletRequest req, final HttpSession httpSess, final String userName) {
 		authComponent.setCurrentUser(userName);
-
-		UserTransaction tx = transactionService.getUserTransaction();
-		NodeRef homeSpaceRef = null;
-		User user;
-		try {
-			tx.begin();
-			user = new User(userName, authService.getCurrentTicket(), personService.getPerson(userName));
-			homeSpaceRef = (NodeRef) nodeService.getProperty(personService.getPerson(userName), ContentModel.PROP_HOMEFOLDER);
-			user.setHomeSpaceId(homeSpaceRef.getId());
-			tx.commit();
-		} catch (Throwable ex) {
-			logger.error(ex);
-
-			try {
-				tx.rollback();
-			} catch (Exception ex2) {
-				logger.error("Failed to rollback transaction", ex2);
+		transactionalHelper.doInTransaction(new Transactionable() {
+			public Object execute() {
+				User user;
+				NodeRef homeSpaceRef = null;
+				user = new User(userName, authService.getCurrentTicket(), personService.getPerson(userName));
+				homeSpaceRef = (NodeRef) nodeService.getProperty(personService.getPerson(userName), ContentModel.PROP_HOMEFOLDER);
+				user.setHomeSpaceId(homeSpaceRef.getId());
+				populateSession(httpSess, user);
+				return null;
 			}
-
-			if (ex instanceof RuntimeException) {
-				throw (RuntimeException) ex;
-			} else {
-				throw new RuntimeException("Failed to set authenticated user", ex);
-			}
-		}
-
-		populateSession(httpSess, user);
-
+		});
 	}
 
 	protected void populateSession(HttpSession httpSess, User user) {
@@ -114,64 +105,50 @@ public class AlfrescoFacade {
 		httpSess.setAttribute(LoginBean.LOGIN_EXTERNAL_AUTH, Boolean.TRUE);
 	}
 
-	protected void createUser(String username, String email, String firstName, String lastName) {
-
-		UserTransaction tx = transactionService.getUserTransaction();
-		try {
-			tx.begin();
-			authenticationService.createAuthentication(username, username.toCharArray());
-			HashMap<QName, Serializable> properties = new HashMap<QName, Serializable>();
-			properties.put(ContentModel.PROP_USERNAME, username);
-			properties.put(ContentModel.PROP_FIRSTNAME, firstName);
-			properties.put(ContentModel.PROP_LASTNAME, lastName);
-			properties.put(ContentModel.PROP_EMAIL, email);
-			NodeRef newPerson = personService.createPerson(properties);
-			permissionService.setPermission(newPerson, username, permissionService.getAllPermission(), true);
-			authenticationService.setAuthenticationEnabled(username, true);
-
-			tx.commit();
-		} catch (NotSupportedException e) {
-			e.printStackTrace();
-		} catch (Throwable ex) {
-			logger.error(ex);
-			try {
-				tx.rollback();
-			} catch (Exception ex2) {
-				logger.error("Failed to rollback transaction", ex2);
+	public void createUser(final String username, final String email, final String firstName, final String lastName) {
+		transactionalHelper.doInTransaction(new Transactionable() {
+			public Object execute() {
+				authenticationService.createAuthentication(username, username.toCharArray());
+				HashMap<QName, Serializable> properties = new HashMap<QName, Serializable>();
+				properties.put(ContentModel.PROP_USERNAME, username);
+				properties.put(ContentModel.PROP_FIRSTNAME, firstName);
+				properties.put(ContentModel.PROP_LASTNAME, lastName);
+				properties.put(ContentModel.PROP_EMAIL, email);
+				NodeRef newPerson = personService.createPerson(properties);
+				permissionService.setPermission(newPerson, username, permissionService.getAllPermission(), true);
+				authenticationService.setAuthenticationEnabled(username, true);
+				return null;
 			}
-			if (ex instanceof RuntimeException) {
-				throw (RuntimeException) ex;
-			} else {
-				throw new RuntimeException("Failed to set authenticated user", ex);
-			}
-		}
-
+		});
 	}
 
-	protected boolean existUser(String username) {
-		boolean exist = false;
-
-		UserTransaction tx = transactionService.getUserTransaction();
-
-		try {
-			tx.begin();
-			exist = personService.personExists(username);
-			tx.commit();
-		} catch (Throwable ex) {
-			logger.error(ex);
-			try {
-				tx.rollback();
-			} catch (Exception ex2) {
-				logger.error("Failed to rollback transaction", ex2);
+	public Boolean existUser(final String username) {
+		return (Boolean) transactionalHelper.doInTransaction(new Transactionable() {
+			public Object execute() {
+				return personService.personExists(username);
 			}
-			if (ex instanceof RuntimeException) {
-				throw (RuntimeException) ex;
-			} else {
-				throw new RuntimeException("Failed to set authenticated user", ex);
-			}
-		}
-
-		return exist;
+		});
 	}
 
+	public ArrayList<String> getUserGroups(String username) {
+		return new ArrayList<String>();
+	}
+
+	public void createGroups(final String principal, final List<String> groups) {
+		if(groups==null || groups.size()==0) {
+			return;
+		}
+		transactionalHelper.doInTransaction(new Transactionable() {
+			public Object execute() {
+				for (String group : groups) {
+					String authority = "GROUP_".concat(group);
+					if(!authorityService.authorityExists(authority)) {
+						authority = authorityService.createAuthority(AuthorityType.GROUP, null, group);
+					}
+					authorityService.addAuthority(authority,principal);
+				}
+				return null;
+			}
+		});
+	}
 }

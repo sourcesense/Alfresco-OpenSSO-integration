@@ -21,13 +21,14 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.classextension.EasyMock.createMock;
 import static org.easymock.classextension.EasyMock.makeThreadSafe;
 import static org.easymock.classextension.EasyMock.replay;
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -122,6 +123,13 @@ public class AlfrescoOpenSSOFilterTest {
 		assertEquals(OPENSSO_LOGIN, alfrescoFilter.getOpenSSOLoginURL());
 	}
 	
+	@Test
+	public void shouldCreateAlfrescoGroups() throws Exception {
+		doSomePostWithCookie("/alfresco/",null);
+		assertEquals(3,alfrescoFilter.getAlfrescoFacade().getUserGroups(USERNAME).size());
+		
+	}
+	
 	
 
 	private HttpTester doSomePostWithCookie(String URI, String setCookie) throws IOException, Exception {
@@ -146,11 +154,16 @@ public class AlfrescoOpenSSOFilterTest {
 	}
 
 	private OpenSSOClientAdapter mockOpenSSOClient() {
+		ArrayList<String> groups = new ArrayList<String>();
+		groups.add("RH");
+		groups.add("marketing");
+		groups.add("administration");
 		OpenSSOClientAdapter mock = createMock(OpenSSOClientAdapter.class);
 		makeThreadSafe(mock, true);
 		expect(mock.createTokenFrom((HttpServletRequest) anyObject())).andStubReturn(mockSSOToken());
 		expect(mock.getPrincipal((SSOToken) anyObject())).andStubReturn(USERNAME);
 		expect(mock.getUserAttribute((String)anyObject(),(SSOToken) anyObject())).andStubReturn("attribute");
+		expect(mock.getGroups((SSOToken)anyObject())).andStubReturn(groups);
 		replay(mock);
 		return mock;
 	}
@@ -159,17 +172,28 @@ public class AlfrescoOpenSSOFilterTest {
 		GenericWebApplicationContext webApplicationContext = new MockAlfrescoApplicationContext();
 		MockServletContext mockServletContext = new MockServletContext();
 		mockServletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, webApplicationContext);
-
 		AlfrescoFacade mockAlfrescoFacade = new AlfrescoFacade(mockServletContext){
 			public ArrayList<String> users = new ArrayList<String>();
+			public HashMap<String, List<String>> groups = new HashMap<String, List<String>>();
 			
 			@Override
-			protected void createUser(String username, String email, String firstName, String lastName) {
+			public void createUser(String username, String email, String firstName, String lastName) {
 				users.add(username);
 			}
+			
 			@Override
-			protected boolean existUser(String username) {
+			public Boolean existUser(String username) {
 				return users.contains(username);
+			}
+			
+			@Override
+			public ArrayList<String> getUserGroups(String username) {
+				return (ArrayList<String>) groups.get(username);
+			}
+			
+			@Override
+			public void createGroups(String principal, List<String> openSSOGroups) {
+				groups.put(principal, openSSOGroups);
 			}
 			
 			@Override

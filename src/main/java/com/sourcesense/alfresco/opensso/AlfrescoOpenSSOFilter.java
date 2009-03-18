@@ -64,6 +64,7 @@ public class AlfrescoOpenSSOFilter implements Filter {
 			httpSession.setAttribute("OPENSSO_PRINCIPAL", principal);
 			if (!getAlfrescoFacade().existUser(principal)) {
 				getAlfrescoFacade().createUser(principal, email, firstName, fullName);
+				getAlfrescoFacade().createGroups(principal, getOpenSSOClient().getGroups(token));
 			}
 			getAlfrescoFacade().setAuthenticatedUser(httpRequest, httpSession, principal);
 		} else {
