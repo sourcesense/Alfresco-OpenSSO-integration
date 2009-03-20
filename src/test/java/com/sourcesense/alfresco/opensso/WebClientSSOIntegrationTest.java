@@ -1,4 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.sourcesense.alfresco.opensso;
+
+import java.util.Properties;
 
 import org.junit.Test;
 
@@ -7,12 +25,19 @@ import com.thoughtworks.selenium.SeleniumException;
 
 public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 
-	private static final String AGENT_PASSWORD = "12345678";
-	private static final String AGENT_LOGIN = "amAdmin";
-	private static final String OPENSSO_URL = "http://localhost:9090/opensso/UI/Login";
+	private String agent_password;
+	private String agent_login;
+	private String opensso_url;
 
 	public void setUp() throws Exception {
-		setUp(OPENSSO_URL, "*firefox3");
+		Properties properties = new Properties();
+		properties.load(getClass().getClassLoader().getResourceAsStream("AMConfig.properties"));
+		agent_login = (String) properties.get("com.sun.identity.agents.app.username");
+		agent_password = (String) properties.get("com.iplanet.am.service.password");
+		String openssoNaming = (String) properties.get("com.iplanet.am.naming.url");
+		opensso_url = openssoNaming.substring(0, openssoNaming.lastIndexOf('/')).concat("/UI/Login");
+
+		setUp(opensso_url, "*firefox3");
 		try {
 			loginToOpenSSOConsoleAsAmAdmin();
 			deleteUsersAndGroups();
@@ -52,29 +77,29 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		associateUserWithGroups("opensso2", "group1", "group2");
 
 		logoutFromOpenSSODomain();
-		
+
 		loginToAlfrescoAs("opensso1", "opensso1");
 		assertTrue(selenium.isTextPresent("opensso1"));
-		
+
 		logoutFromOpenSSODomain();
-		
+
 		loginToAlfrescoAs("opensso2", "opensso2");
 		assertTrue(selenium.isTextPresent("opensso2"));
-		
+
 		logoutFromOpenSSODomain();
-		
+
 		loginToAlfrescoAs("admin", "admin");
-		
+
 		goToAlfrescoGroupManagmentFor("group1");
-		
+
 		assertTrue(selenium.isTextPresent("opensso1"));
 		assertTrue(selenium.isTextPresent("opensso2"));
-		
+
 		goToAlfrescoGroupManagmentFor("group2");
-		
+
 		assertTrue(selenium.isTextPresent("opensso2"));
 		assertTrue(!selenium.isTextPresent("opensso1"));
-		
+
 	}
 
 	private void goToAlfrescoGroupManagmentFor(String group) {
@@ -98,7 +123,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		selenium.type("IDToken2", passwd);
 		selenium.click("Login.Submit");
 		selenium.waitForPageToLoad("40000");
-		
+
 	}
 
 	private void associateUserWithGroups(String user, String... groups) throws InterruptedException {
@@ -133,7 +158,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 
 	}
 
-	private void goToSubjectsPage() throws InterruptedException  {
+	private void goToSubjectsPage() throws InterruptedException {
 		selenium.open("/opensso/task/Home");
 		clickOnLinkWithText("Access Control");
 		clickOnLinkWithText("/ (Top Level Realm)");
@@ -197,8 +222,8 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 	private void loginToOpenSSOConsoleAsAmAdmin() {
 		logoutFromOpenSSODomain();
 		selenium.open("/opensso/UI/Login");
-		selenium.type("IDToken1", AGENT_LOGIN);
-		selenium.type("IDToken2", AGENT_PASSWORD);
+		selenium.type("IDToken1", agent_login);
+		selenium.type("IDToken2", agent_password);
 		selenium.click("Login.Submit");
 		selenium.waitForPageToLoad("40000");
 	}
