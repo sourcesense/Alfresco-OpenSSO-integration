@@ -1,4 +1,0 @@
-com.iplanet.am.naming.url=http://localhost:9090/opensso/namingservice
-com.iplanet.am.cookie.name=iPlanetDirectoryPro
-com.sun.identity.agents.app.username=UrlAccessAgent
-com.iplanet.am.service.password=123456789

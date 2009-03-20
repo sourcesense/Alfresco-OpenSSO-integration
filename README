@@ -1,13 +1,9 @@
--------------------------------------
--------------------------------------
----                               ---
----  Alfresco-OpenSSO Integration ---
----                               ---
--------------------------------------
-------------------------------------- 
+=====================================
+===  Alfresco-OpenSSO Integration ===
+=====================================
 
 DEPLOYMENT
-----------
+==========
 
 1. Build the jar from the sources, or download the latest release of the filter from: 
 
@@ -19,26 +15,16 @@ http://repository.sourcesense.com/nexus/content/repositories/thirdparty/com/sun/
 
 2. Copy both to <Alfresco_Home>/tomcat/webapps/alfresco/WEB-INF/lib
 
-3. Rename file AMConfig.properties.sample to AMConfig.properties. Change the property values according to the
-existing OpenSSO server installation. Then copy the .properties to 
-<Alfresco_Home>/tomcat/webapps/alfresco/WEB-INF/classes
+3. Change the file AMConfig.properties from src/test/resources according to the
+existing OpenSSO server installation. Then copy the file to <Alfresco_Home>/tomcat/webapps/alfresco/WEB-INF/classes
 
-4. Edit <Alfresco_Home>/tomcat/webapps/alfresco/WEB-INF/web.xml. Search for the declaration of Authentication 
-Filter and replace it by the Alfresco-OpenSSO integration filter (changing first the 'opensso.url' value):
-
- <filter>
-       <filter-name>Authentication Filter</filter-name>
-       <filter-class>com.sourcesense.alfresco.opensso.AlfrescoOpenSSOFilter</filter-class>
-       <init-param>
-           <param-name>opensso.url</param-name>
-           <param-value>http://localhost:9090/opensso</param-value>
-       </init-param>
- </filter>
+4. Replace <Alfresco_Home>/tomcat/webapps/alfresco/WEB-INF/web.xml with src/main/webapp/WEB-INF/web.xml
 
 USAGE
------
+=====
 
 Accessing Alfresco's home will redirect the browser to OpenSSO login page. 
 After a successful login, openSSO will redirect the browser back to Alfresco. 
-If user does not exist in Alfresco, it'll be created. 
+If user does not exist in Alfresco, it'll be created. The groups associated with the user in OpenSSO
+will be created in Alfresco, and the user will be associated with this groups.
 In order to access alfresco administration, the "admin" user must be created in OpenSSO as well.

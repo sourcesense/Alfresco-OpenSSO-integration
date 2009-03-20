@@ -84,7 +84,6 @@ public class AlfrescoOpenSSOFilterTest {
 	@Test
 	public void shoulDoChainWhenAuthenticated() throws Exception {
 		HttpTester response = doSomePostWithCookie("/alfresco/",null);
-		
 		assertEquals(HTTP_OK, response.getStatus());
 		assertTrue(response.getContent().contains("Simple Servlet"));
 		assertNotNull(response.getHeader("SimpleFilter"));
