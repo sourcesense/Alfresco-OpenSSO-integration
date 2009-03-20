@@ -38,6 +38,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		opensso_url = openssoNaming.substring(0, openssoNaming.lastIndexOf('/')).concat("/UI/Login");
 
 		setUp(opensso_url, "*firefox3");
+		
 		try {
 			loginToOpenSSOConsoleAsAmAdmin();
 			deleteUsersAndGroups();
@@ -46,21 +47,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		}
 	}
 
-	private void clickOnLinkWithText(String label) throws InterruptedException {
-		for (int second = 0;; second++) {
-			if (second >= 60)
-				fail("timeout");
-			try {
-				if (selenium.isTextPresent(label))
-					break;
-			} catch (Exception e) {
-			}
-			Thread.sleep(1000);
-		}
-
-		selenium.click("link=".concat(label));
-		selenium.waitForPageToLoad("40000");
-	}
+	
 
 	@Test
 	public void testSSO() throws Exception {
@@ -222,9 +209,25 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 	private void loginToOpenSSOConsoleAsAmAdmin() {
 		logoutFromOpenSSODomain();
 		selenium.open("/opensso/UI/Login");
-		selenium.type("IDToken1", agent_login);
-		selenium.type("IDToken2", agent_password);
+		selenium.type("IDToken1", "amAdmin");
+		selenium.type("IDToken2", "amAdmin");
 		selenium.click("Login.Submit");
+		selenium.waitForPageToLoad("40000");
+	}
+	
+	private void clickOnLinkWithText(String label) throws InterruptedException {
+		for (int second = 0;; second++) {
+			if (second >= 60)
+				fail("timeout");
+			try {
+				if (selenium.isTextPresent(label))
+					break;
+			} catch (Exception e) {
+			}
+			Thread.sleep(1000);
+		}
+
+		selenium.click("link=".concat(label));
 		selenium.waitForPageToLoad("40000");
 	}
 }
