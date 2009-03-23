@@ -46,9 +46,8 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 			System.out.println("Groups and Users already cleaned");
 		}
 	}
-
 	
-
+	
 	@Test
 	public void testSSO() throws Exception {
 		loginToOpenSSOConsoleAsAmAdmin();
@@ -72,6 +71,10 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 
 		loginToAlfrescoAs("opensso2", "opensso2");
 		assertTrue(selenium.isTextPresent("opensso2"));
+		
+		String email = "a@b.com";
+		changeUserEmailTo(email);
+		assertTrue(selenium.isTextPresent(email));
 
 		logoutFromOpenSSODomain();
 
@@ -88,6 +91,17 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		assertTrue(!selenium.isTextPresent("opensso1"));
 
 	}
+
+	private void changeUserEmailTo(String email) {
+		selenium.click("//img[@alt='User Profile']");
+		selenium.waitForPageToLoad("40000");
+		selenium.click("//img[@alt='Modify']");
+		selenium.waitForPageToLoad("40000");
+		selenium.type("dialog:dialog-body:email", email);
+		selenium.click("dialog:finish-button");
+		selenium.waitForPageToLoad("40000");
+	}
+
 
 	private void goToAlfrescoGroupManagmentFor(String group) {
 		selenium.click("//img[@alt='Administration Console']");

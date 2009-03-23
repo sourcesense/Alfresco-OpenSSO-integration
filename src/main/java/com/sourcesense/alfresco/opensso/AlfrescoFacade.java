@@ -113,11 +113,15 @@ public class AlfrescoFacade {
 				properties.put(ContentModel.PROP_USERNAME, username);
 				properties.put(ContentModel.PROP_FIRSTNAME, firstName);
 				properties.put(ContentModel.PROP_LASTNAME, lastName);
-				properties.put(ContentModel.PROP_EMAIL, email);
+				properties.put(ContentModel.PROP_EMAIL, getNullSafe(email));
 				NodeRef newPerson = personService.createPerson(properties);
 				permissionService.setPermission(newPerson, username, permissionService.getAllPermission(), true);
 				authenticationService.setAuthenticationEnabled(username, true);
 				return null;
+			}
+
+			private String getNullSafe(String email) {
+				return (email==null||email.isEmpty())?username.concat("@"):email;
 			}
 		});
 	}
