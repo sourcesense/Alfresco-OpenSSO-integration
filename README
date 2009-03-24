@@ -27,4 +27,8 @@ Accessing Alfresco's home will redirect the browser to OpenSSO login page.
 After a successful login, openSSO will redirect the browser back to Alfresco. 
 If user does not exist in Alfresco, it'll be created. The groups associated with the user in OpenSSO
 will be created in Alfresco, and the user will be associated with this groups.
+If the user's groups are changed in OpenSSO, the filter will reflect those changes in the moment of login.
+No group will bi deleted on Alfresco, just the user association with the groups.
+
+
 In order to access alfresco administration, the "admin" user must be created in OpenSSO as well.

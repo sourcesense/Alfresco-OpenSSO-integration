@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -138,12 +139,19 @@ public class AlfrescoFacade {
 		return new ArrayList<String>();
 	}
 
-	public void createGroups(final String principal, final List<String> groups) {
+	public void createOrUpdateGroups(final String principal, final List<String> groups) {
 		if(groups==null || groups.size()==0) {
 			return;
 		}
 		transactionalHelper.doInTransaction(new Transactionable() {
 			public Object execute() {
+				Set<String> authoritiesForUser = authorityService.getAuthoritiesForUser(principal);
+				for (String authority : authoritiesForUser) {
+					String groupName = authority.substring("GROUP_".length());
+					if(!groups.contains(groupName) && !groupName.equals("EVERYONE")) {
+						authorityService.removeAuthority(authority,principal);
+					}
+				}
 				for (String group : groups) {
 					String authority = "GROUP_".concat(group);
 					if(!authorityService.authorityExists(authority)) {

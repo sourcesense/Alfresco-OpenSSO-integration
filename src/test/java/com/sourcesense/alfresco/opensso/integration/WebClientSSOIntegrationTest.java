@@ -14,10 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.sourcesense.alfresco.opensso;
+package com.sourcesense.alfresco.opensso.integration;
+
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.thoughtworks.selenium.SeleneseTestCase;
@@ -66,7 +69,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 
 		loginToAlfrescoAs("opensso1", "opensso1");
 		assertTrue(selenium.isTextPresent("opensso1"));
-
+		
 		logoutFromOpenSSODomain();
 
 		loginToAlfrescoAs("opensso2", "opensso2");
@@ -89,7 +92,30 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 
 		assertTrue(selenium.isTextPresent("opensso2"));
 		assertTrue(!selenium.isTextPresent("opensso1"));
-
+		
+		
+		loginToOpenSSOConsoleAsAmAdmin();
+		
+		createGroup("group3");
+		associateUserWithGroups("opensso2", "group3");
+		
+		logoutFromOpenSSODomain();
+		
+		loginToAlfrescoAs("opensso2", "opensso2");
+		
+		logoutFromOpenSSODomain();
+		
+		loginToAlfrescoAs("admin", "admin");
+		
+		
+		goToAlfrescoGroupManagmentFor("group1");
+		assertTrue(!selenium.isTextPresent("opensso2"));
+		
+		goToAlfrescoGroupManagmentFor("group2");
+		assertTrue(!selenium.isTextPresent("opensso2"));
+		
+		goToAlfrescoGroupManagmentFor("group3");
+		assertTrue(selenium.isTextPresent("opensso2"));
 	}
 
 	private void changeUserEmailTo(String email) {
@@ -144,18 +170,20 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 			}
 			Thread.sleep(1000);
 		}
-
+		selenium.click("EntityMembership.addRemoveMembers.RemoveAllButton");
+		
 		for (int i = 0; i < groups.length; i++) {
-			selenium.click("EntityMembership.addRemoveMembers.RemoveAllButton");
-			selenium.removeSelection("EntityMembership.addRemoveMembers.AvailableListBox", "label=administration");
-			selenium.addSelection("EntityMembership.addRemoveMembers.AvailableListBox", "label=".concat(groups[i]));
-			selenium.click("EntityMembership.addRemoveMembers.AddButton");
+			selenium.type("EntityMembership.tfFilter", groups[i]);
+			selenium.click("EntityMembership.btnSearch");
+			selenium.waitForPageToLoad("40000");
+			selenium.click("EntityMembership.addRemoveMembers.AddAllButton");
 			selenium.click("EntityMembership.button1");
 			selenium.waitForPageToLoad("40000");
 		}
 
 		selenium.click("EntityMembership.button3");
 		selenium.waitForPageToLoad("40000");
+		goToSubjectsPage();
 
 	}
 
@@ -186,8 +214,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		selenium.type("Entities.tfFilter", "group*");
 		selenium.click("Entities.btnSearch");
 		selenium.waitForPageToLoad("40000");
-		selenium.click("Entities.tblSearch.SelectionCheckbox0");
-		selenium.click("Entities.tblSearch.SelectionCheckbox1");
+		selenium.click("Entities.tblSearch.SelectAllImage");
 		selenium.click("Entities.tblButtonDelete");
 		selenium.waitForPageToLoad("40000");
 		logoutFromOpenSSODomain();

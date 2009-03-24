@@ -22,6 +22,9 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.iplanet.sso.SSOException;
 import com.iplanet.sso.SSOToken;
 import com.iplanet.sso.SSOTokenManager;
@@ -36,6 +39,8 @@ import com.sun.identity.idm.IdUtils;
  */
 public class OpenSSOClientAdapter {
 
+	private static Log logger = LogFactory.getLog(OpenSSOClientAdapter.class);
+	
 	public static final String ATTR_UID = "uid";
 	public static final String ATTR_LAST_NAME = "sn";
 	public static final String ATTR_FULL_NAME = "cn";
@@ -50,7 +55,7 @@ public class OpenSSOClientAdapter {
 		try {
 			tokenManager = SSOTokenManager.getInstance();
 		} catch (SSOException e) {
-			e.printStackTrace();
+			logger.error("Error obtained SSOTOkenManager instance");
 		}
 	}
 
@@ -60,7 +65,7 @@ public class OpenSSOClientAdapter {
 	 * @param request
 	 * @return The token or null if session not valid
 	 */
-	public SSOToken createTokenFrom(HttpServletRequest request) {
+	public synchronized SSOToken createTokenFrom(HttpServletRequest request) {
 		SSOToken token = null;
 		try {
 			token = tokenManager.createSSOToken(request);
@@ -69,7 +74,7 @@ public class OpenSSOClientAdapter {
 				return token;
 			}
 		} catch (SSOException e) {
-			e.printStackTrace();
+			logger.info("Request does not contain a valid session");
 		}
 		return token;
 	}

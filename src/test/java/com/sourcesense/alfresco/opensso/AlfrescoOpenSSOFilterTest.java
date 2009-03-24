@@ -17,16 +17,12 @@
 package com.sourcesense.alfresco.opensso;
 
 import static org.easymock.EasyMock.anyObject;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.classextension.EasyMock.createMock;
-import static org.easymock.classextension.EasyMock.makeThreadSafe;
-import static org.easymock.classextension.EasyMock.replay;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.easymock.classextension.EasyMock.*;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -35,6 +31,7 @@ import javax.servlet.http.HttpSession;
 
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.web.bean.repository.User;
+import org.apache.commons.collections.ResettableIterator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,9 +55,17 @@ public class AlfrescoOpenSSOFilterTest {
 
 	private ServletTester tester = new ServletTester();
 	private AlfrescoOpenSSOFilter alfrescoFilter;
+	private ArrayList<String> groups;
 
 	@Before
 	public void setUp() throws Exception {
+		
+		groups = new ArrayList<String>();
+		groups.add("RH");
+		groups.add("marketing");
+		groups.add("administration");
+		
+		
 		tester = new ServletTester();
 		tester.setContextPath("/alfresco");
 		tester.addServlet(SimpleServlet.class, "/");
@@ -129,6 +134,26 @@ public class AlfrescoOpenSSOFilterTest {
 		
 	}
 	
+	@Test
+	public void shouldSynchronizeGroups() throws Exception {
+		doSomePostWithCookie("/alfresco/",null);
+		
+		groups = new ArrayList<String>();
+		groups.add("group1");
+		
+
+		alfrescoFilter.setOpenSSOClient(mockOpenSSOClient());
+		
+		HttpTester response = doSomePostWithCookie("/alfresco/",null);
+		
+		ArrayList<String> groups = alfrescoFilter.getAlfrescoFacade().getUserGroups("user1");
+		
+		assertEquals(HTTP_OK, response.getStatus());
+		assertEquals(1,groups.size());
+		assertTrue(groups.contains("group1"));
+		assertTrue(!groups.contains("marketing"));
+	}
+	
 	
 
 	private HttpTester doSomePostWithCookie(String URI, String setCookie) throws IOException, Exception {
@@ -151,12 +176,9 @@ public class AlfrescoOpenSSOFilterTest {
 	private SSOToken mockSSOToken() {
 		return createMock(SSOToken.class);
 	}
-
+	
+	
 	private OpenSSOClientAdapter mockOpenSSOClient() {
-		ArrayList<String> groups = new ArrayList<String>();
-		groups.add("RH");
-		groups.add("marketing");
-		groups.add("administration");
 		OpenSSOClientAdapter mock = createMock(OpenSSOClientAdapter.class);
 		makeThreadSafe(mock, true);
 		expect(mock.createTokenFrom((HttpServletRequest) anyObject())).andStubReturn(mockSSOToken());
@@ -191,7 +213,8 @@ public class AlfrescoOpenSSOFilterTest {
 			}
 			
 			@Override
-			public void createGroups(String principal, List<String> openSSOGroups) {
+			public void createOrUpdateGroups(String principal, List<String> openSSOGroups) {
+				groups.remove(principal);
 				groups.put(principal, openSSOGroups);
 			}
 			

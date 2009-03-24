@@ -17,6 +17,7 @@
 package com.sourcesense.alfresco.opensso;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -29,6 +30,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.iplanet.sso.SSOToken;
 
 /**
@@ -40,6 +44,8 @@ import com.iplanet.sso.SSOToken;
  */
 public class AlfrescoOpenSSOFilter implements Filter {
 
+	private static Log logger = LogFactory.getLog(AlfrescoOpenSSOFilter.class);
+
 	private String openSSOServerURL;
 	private OpenSSOClientAdapter openSSOClientAdapter;
 	private AlfrescoFacade alfrescoFacade;
@@ -50,7 +56,7 @@ public class AlfrescoOpenSSOFilter implements Filter {
 	}
 
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-
+		logger.debug("Begin filter for Alfresco-OpenSSO");
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		HttpSession httpSession = httpRequest.getSession();
@@ -64,8 +70,15 @@ public class AlfrescoOpenSSOFilter implements Filter {
 			httpSession.setAttribute("OPENSSO_PRINCIPAL", principal);
 			if (!getAlfrescoFacade().existUser(principal)) {
 				getAlfrescoFacade().createUser(principal, email, firstName, fullName);
-				getAlfrescoFacade().createGroups(principal, getOpenSSOClient().getGroups(token));
 			}
+			List<String> groups = getOpenSSOClient().getGroups(token);
+			if (groups != null) {
+				for (String string : groups) {
+					logger.debug("Found openSSOGroups for principal " + principal);
+					logger.debug(string);
+				}
+			}
+			getAlfrescoFacade().createOrUpdateGroups(principal, groups);
 			getAlfrescoFacade().setAuthenticatedUser(httpRequest, httpSession, principal);
 		} else {
 			httpResponse.sendRedirect(buildURLForRedirect(request));
@@ -75,6 +88,7 @@ public class AlfrescoOpenSSOFilter implements Filter {
 		if (doChain) {
 			chain.doFilter(request, response);
 		}
+		logger.debug("End filter for Alfresco-OpenSSO");
 
 	}
 
