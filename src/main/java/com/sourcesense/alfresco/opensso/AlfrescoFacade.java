@@ -41,6 +41,7 @@ import org.alfresco.service.transaction.TransactionService;
 import org.alfresco.web.app.servlet.AuthenticationHelper;
 import org.alfresco.web.bean.LoginBean;
 import org.alfresco.web.bean.repository.User;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.context.WebApplicationContext;
@@ -136,7 +137,7 @@ public class AlfrescoFacade {
 	}
 
 	public ArrayList<String> getUserGroups(String username) {
-		return new ArrayList<String>();
+		throw new NotImplementedException("Not implemented");
 	}
 
 	public void createOrUpdateGroups(final String principal, final List<String> groups) {

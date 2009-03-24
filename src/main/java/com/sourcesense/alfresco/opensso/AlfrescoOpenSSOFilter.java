@@ -72,12 +72,6 @@ public class AlfrescoOpenSSOFilter implements Filter {
 				getAlfrescoFacade().createUser(principal, email, firstName, fullName);
 			}
 			List<String> groups = getOpenSSOClient().getGroups(token);
-			if (groups != null) {
-				for (String string : groups) {
-					logger.debug("Found openSSOGroups for principal " + principal);
-					logger.debug(string);
-				}
-			}
 			getAlfrescoFacade().createOrUpdateGroups(principal, groups);
 			getAlfrescoFacade().setAuthenticatedUser(httpRequest, httpSession, principal);
 		} else {

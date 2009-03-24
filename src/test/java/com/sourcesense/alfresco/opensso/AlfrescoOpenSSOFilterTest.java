@@ -207,7 +207,6 @@ public class AlfrescoOpenSSOFilterTest {
 				return users.contains(username);
 			}
 			
-			@Override
 			public ArrayList<String> getUserGroups(String username) {
 				return (ArrayList<String>) groups.get(username);
 			}
