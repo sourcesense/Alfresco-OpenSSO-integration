@@ -65,7 +65,7 @@ public class OpenSSOClientAdapter {
 	 * @param request
 	 * @return The token or null if session not valid
 	 */
-	public synchronized SSOToken createTokenFrom(HttpServletRequest request) {
+	public  SSOToken createTokenFrom(HttpServletRequest request) {
 		SSOToken token = null;
 		try {
 			token = tokenManager.createSSOToken(request);
@@ -127,5 +127,13 @@ public class OpenSSOClientAdapter {
 			e.printStackTrace();
 		}
 		return principal;
+	}
+
+	public void destroyToken(SSOToken token) {
+		try {
+			tokenManager.destroyToken(token);
+		} catch (SSOException e) {
+			e.printStackTrace();
+		}
 	}
 }

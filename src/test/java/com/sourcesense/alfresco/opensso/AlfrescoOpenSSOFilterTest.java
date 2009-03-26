@@ -16,13 +16,10 @@
  */
 package com.sourcesense.alfresco.opensso;
 
-import static org.easymock.EasyMock.anyObject;
-import static org.easymock.classextension.EasyMock.*;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -31,7 +28,6 @@ import javax.servlet.http.HttpSession;
 
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.web.bean.repository.User;
-import org.apache.commons.collections.ResettableIterator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,30 +38,21 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 
-import com.iplanet.sso.SSOToken;
-
 public class AlfrescoOpenSSOFilterTest {
 
+	private static final String ALFRESCO_URL = "/alfresco/";
 	private static final String MOCK_ALFRESCO_URL = "http://localhost:80/alfresco";
 	private static final String OPENSSO_URL = "http://server.domain/opensso";
 	private static final String OPENSSO_LOGIN = OPENSSO_URL + "/UI/Login";
 	private static final String USERNAME = "user1";
-	private static final int HTTP_OK = 200;
-	private static final int HTTP_REDIRECT = 302;
+	private static final int HTTP_CODE_OK = 200;
+	private static final int HTTP_CODE_REDIRECT = 302;
 
 	private ServletTester tester = new ServletTester();
 	private AlfrescoOpenSSOFilter alfrescoFilter;
-	private ArrayList<String> groups;
 
 	@Before
 	public void setUp() throws Exception {
-		
-		groups = new ArrayList<String>();
-		groups.add("RH");
-		groups.add("marketing");
-		groups.add("administration");
-		
-		
 		tester = new ServletTester();
 		tester.setContextPath("/alfresco");
 		tester.addServlet(SimpleServlet.class, "/");
@@ -76,7 +63,7 @@ public class AlfrescoOpenSSOFilterTest {
 
 		alfrescoFilter = (AlfrescoOpenSSOFilter) filterHolder.getFilter();
 		alfrescoFilter.setAlfrescoFacade(mockAlfrescoFacade());
-		alfrescoFilter.setOpenSSOClient(mockOpenSSOClient());
+		alfrescoFilter.setOpenSSOClient(new MockOpenSSOClient(USERNAME));
 		
 		
 	}
@@ -88,8 +75,9 @@ public class AlfrescoOpenSSOFilterTest {
 
 	@Test
 	public void shoulDoChainWhenAuthenticated() throws Exception {
-		HttpTester response = doSomePostWithCookie("/alfresco/",null);
-		assertEquals(HTTP_OK, response.getStatus());
+		authenticate();
+		HttpTester response = doRequest(ALFRESCO_URL);
+		assertEquals(HTTP_CODE_OK, response.getStatus());
 		assertTrue(response.getContent().contains("Simple Servlet"));
 		assertNotNull(response.getHeader("SimpleFilter"));
 		assertEquals(SimpleServlet.SIMPLE_SERVLET_CONTENT,response.getContent().trim());
@@ -98,15 +86,12 @@ public class AlfrescoOpenSSOFilterTest {
 
 	@Test
 	public void shouldRedirectToOpenSSOWhenNotAuthenticated() throws IOException, Exception {
-		OpenSSOClientAdapter mock = createMock(OpenSSOClientAdapter.class);
-		expect(mock.createTokenFrom((HttpServletRequest) anyObject())).andStubReturn(null);
-		replay(mock);
-		alfrescoFilter.setOpenSSOClient(mock);
-
-		HttpTester response = doSomePostWithCookie("/alfresco/",null);
-
-		assertEquals(HTTP_REDIRECT, response.getStatus());
+		HttpTester response = doRequest(ALFRESCO_URL);
+		assertEquals(HTTP_CODE_REDIRECT, response.getStatus());
 		assertTrue(response.getHeader("Location").equals(OPENSSO_LOGIN.concat("?goto=").concat(MOCK_ALFRESCO_URL)));
+		
+		response = doRequest(ALFRESCO_URL);
+		assertEquals(HTTP_CODE_OK, response.getStatus());
 	}
 
 	@Test
@@ -117,7 +102,8 @@ public class AlfrescoOpenSSOFilterTest {
 
 	@Test
 	public void shouldCreateUserInAlfresco() throws Exception {
-		doSomePostWithCookie("/alfresco/",null);
+		authenticate();
+		doRequest(ALFRESCO_URL);
 		assertTrue(alfrescoFilter.getAlfrescoFacade().existUser(USERNAME));
 	}
 
@@ -129,65 +115,74 @@ public class AlfrescoOpenSSOFilterTest {
 	
 	@Test
 	public void shouldCreateAlfrescoGroups() throws Exception {
-		doSomePostWithCookie("/alfresco/",null);
+		authenticate();
+		doRequest(ALFRESCO_URL);
 		assertEquals(3,alfrescoFilter.getAlfrescoFacade().getUserGroups(USERNAME).size());
 		
 	}
 	
 	@Test
 	public void shouldSynchronizeGroups() throws Exception {
-		doSomePostWithCookie("/alfresco/",null);
+		authenticate();
 		
-		groups = new ArrayList<String>();
+		ArrayList<String> groups = new ArrayList<String>();
 		groups.add("group1");
 		
-
-		alfrescoFilter.setOpenSSOClient(mockOpenSSOClient());
+		alfrescoFilter.setOpenSSOClient(new MockOpenSSOClient(USERNAME, groups));
 		
-		HttpTester response = doSomePostWithCookie("/alfresco/",null);
+		doRequest(ALFRESCO_URL);
 		
-		ArrayList<String> groups = alfrescoFilter.getAlfrescoFacade().getUserGroups("user1");
+		HttpTester response = doRequest(ALFRESCO_URL);
 		
-		assertEquals(HTTP_OK, response.getStatus());
-		assertEquals(1,groups.size());
+		ArrayList<String> currentGroups = alfrescoFilter.getAlfrescoFacade().getUserGroups("user1");
+		
+		assertEquals(HTTP_CODE_OK, response.getStatus());
+		assertEquals(1,currentGroups.size());
 		assertTrue(groups.contains("group1"));
 		assertTrue(!groups.contains("marketing"));
 	}
 	
 	
+	@Test
+	public void shouldLogoutFromAlfresco() throws Exception {
+		authenticate();
+		doRequest(ALFRESCO_URL);
+		
+		HttpTester response = new HttpTester();
+		HttpTester request = new HttpTester();
 
-	private HttpTester doSomePostWithCookie(String URI, String setCookie) throws IOException, Exception {
+		request.setMethod("POST");
+		request.setHeader("Host", "localhost");
+		request.setURI(ALFRESCO_URL);
+		request.setVersion("HTTP/1.1");
+		request.setContent("browse%3Aact=browse%3Alogout");
+		request.setHeader("Content-Type", "application/x-www-form-urlencoded");
+		
+		String responses = tester.getResponses(request.generate());
+		response.parse(responses);
+		
+		assertEquals(HTTP_CODE_REDIRECT, response.getStatus());
+		
+	}
+	
+	private void authenticate() throws IOException, Exception {
+		doRequest(ALFRESCO_URL);
+	}
+
+	private HttpTester doRequest(String URI) throws IOException, Exception {
 		HttpTester request = new HttpTester();
 		HttpTester response = new HttpTester();
 		request.setMethod("GET");
 		request.setHeader("Host", "localhost");
 		request.setURI(URI);
 		request.setVersion("HTTP/1.1");
-		if (setCookie != null) {
-			request.addHeader("Cookie", setCookie.split(";")[0]);
-		}
 		String responses = tester.getResponses(request.generate());
-		System.out.println(responses);
 		response.parse(responses);
 		return response;
 	}
 	
 	
-	private SSOToken mockSSOToken() {
-		return createMock(SSOToken.class);
-	}
 	
-	
-	private OpenSSOClientAdapter mockOpenSSOClient() {
-		OpenSSOClientAdapter mock = createMock(OpenSSOClientAdapter.class);
-		makeThreadSafe(mock, true);
-		expect(mock.createTokenFrom((HttpServletRequest) anyObject())).andStubReturn(mockSSOToken());
-		expect(mock.getPrincipal((SSOToken) anyObject())).andStubReturn(USERNAME);
-		expect(mock.getUserAttribute((String)anyObject(),(SSOToken) anyObject())).andStubReturn("attribute");
-		expect(mock.getGroups((SSOToken)anyObject())).andStubReturn(groups);
-		replay(mock);
-		return mock;
-	}
 
 	private AlfrescoFacade mockAlfrescoFacade() {
 		GenericWebApplicationContext webApplicationContext = new MockAlfrescoApplicationContext();

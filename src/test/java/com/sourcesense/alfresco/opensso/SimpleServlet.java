@@ -28,6 +28,11 @@ public class SimpleServlet extends HttpServlet  {
 	public static final String SIMPLE_SERVLET_CONTENT = "Simple Servlet";
 
 	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		resp.getOutputStream().println(SIMPLE_SERVLET_CONTENT);
+	}
+	
+	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		resp.getOutputStream().println(SIMPLE_SERVLET_CONTENT);
 	}

@@ -30,6 +30,10 @@ Run alfresco embedded in jetty with the filter deployed:
 
 $ mvn -Pintegration jetty:run-exploded
 
+Run alfresco embedded in jetty with the filter deployed in debug mode (port 8000): 
+
+$ mvnDebug -Pintegration jetty:run-exploded
+
 Run selenium server:
 
 $ mvn selenium:start-server

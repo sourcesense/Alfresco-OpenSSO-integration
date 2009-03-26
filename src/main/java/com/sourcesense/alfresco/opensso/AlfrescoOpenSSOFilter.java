@@ -17,6 +17,7 @@
 package com.sourcesense.alfresco.opensso;
 
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.servlet.Filter;
@@ -60,15 +61,20 @@ public class AlfrescoOpenSSOFilter implements Filter {
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		HttpSession httpSession = httpRequest.getSession();
+		
 		boolean doChain = true;
 		SSOToken token = getOpenSSOClient().createTokenFrom(httpRequest);
+		
+		if(isLogoutRequest(httpRequest)) {
+			token = doLogout(httpSession, token);
+		}
+		
 		if (token != null) {
 			String principal = getOpenSSOClient().getPrincipal(token);
-			String email = getOpenSSOClient().getUserAttribute(OpenSSOClientAdapter.ATTR_EMAIL, token);
-			String fullName = getOpenSSOClient().getUserAttribute(OpenSSOClientAdapter.ATTR_FULL_NAME, token);
-			String firstName = getOpenSSOClient().getUserAttribute(OpenSSOClientAdapter.ATTR_LAST_NAME, token);
-			httpSession.setAttribute("OPENSSO_PRINCIPAL", principal);
 			if (!getAlfrescoFacade().existUser(principal)) {
+				String email = getOpenSSOClient().getUserAttribute(OpenSSOClientAdapter.ATTR_EMAIL, token);
+				String fullName = getOpenSSOClient().getUserAttribute(OpenSSOClientAdapter.ATTR_FULL_NAME, token);
+				String firstName = getOpenSSOClient().getUserAttribute(OpenSSOClientAdapter.ATTR_LAST_NAME, token);
 				getAlfrescoFacade().createUser(principal, email, firstName, fullName);
 			}
 			List<String> groups = getOpenSSOClient().getGroups(token);
@@ -84,6 +90,27 @@ public class AlfrescoOpenSSOFilter implements Filter {
 		}
 		logger.debug("End filter for Alfresco-OpenSSO");
 
+	}
+
+	private SSOToken doLogout(HttpSession httpSession, SSOToken token) {
+		getOpenSSOClient().destroyToken(token);
+		httpSession.invalidate();
+		token = null;
+		return token;
+	}
+	
+	private boolean isLogoutRequest(HttpServletRequest request) {
+		Enumeration parameterNames = request.getParameterNames();
+		while (parameterNames.hasMoreElements()) {
+			String  parameter = (String ) parameterNames.nextElement();
+			String[] string = request.getParameterValues(parameter);
+			for (int i = 0; i < string.length; i++) {
+				if(string[i]!=null && string[i].contains(":logout")) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public void init(FilterConfig config) throws ServletException {

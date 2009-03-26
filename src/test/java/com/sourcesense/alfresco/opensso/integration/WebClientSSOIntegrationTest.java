@@ -16,11 +16,8 @@
  */
 package com.sourcesense.alfresco.opensso.integration;
 
-import static org.junit.Assert.*;
-
 import java.util.Properties;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.thoughtworks.selenium.SeleneseTestCase;
@@ -70,7 +67,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		loginToAlfrescoAs("opensso1", "opensso1");
 		assertTrue(selenium.isTextPresent("opensso1"));
 		
-		logoutFromOpenSSODomain();
+		logoutFromAlfresco();
 
 		loginToAlfrescoAs("opensso2", "opensso2");
 		assertTrue(selenium.isTextPresent("opensso2"));
@@ -79,7 +76,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		changeUserEmailTo(email);
 		assertTrue(selenium.isTextPresent(email));
 
-		logoutFromOpenSSODomain();
+		logoutFromAlfresco();
 
 		loginToAlfrescoAs("admin", "admin");
 
@@ -117,6 +114,16 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		goToAlfrescoGroupManagmentFor("group3");
 		assertTrue(selenium.isTextPresent("opensso2"));
 	}
+
+	private void logoutFromAlfresco() {
+		selenium.click("logout");
+		selenium.waitForPageToLoad("40000");
+		selenium.open("http://localhost:8080/alfresco/");
+		selenium.waitForPageToLoad("40000");
+		assertTrue(selenium.isTextPresent("Password:"));
+		
+	}
+
 
 	private void changeUserEmailTo(String email) {
 		selenium.click("//img[@alt='User Profile']");
