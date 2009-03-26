@@ -22,7 +22,7 @@
 	<groupId>com.sourcesense.alfresco</groupId>
 	<artifactId>alfresco-opensso</artifactId>
 	<packaging>jar</packaging>
-	<version>0.3-SNAPSHOT</version>
+	<version>0.4-SNAPSHOT</version>
 	<name>Alfresco OpenSSO Integration</name>
 	<build>
 		<plugins>
