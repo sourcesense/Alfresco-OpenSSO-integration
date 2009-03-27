@@ -31,6 +31,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.alfresco.web.app.servlet.AuthenticationFilter;
+import org.alfresco.web.app.servlet.AuthenticationHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -57,19 +59,34 @@ public class AlfrescoOpenSSOFilter implements Filter {
 	}
 
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		logger.debug("Begin filter for Alfresco-OpenSSO");
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		HttpSession httpSession = httpRequest.getSession();
 		
-		boolean doChain = true;
 		SSOToken token = getOpenSSOClient().createTokenFrom(httpRequest);
 		
-		if(isLogoutRequest(httpRequest)) {
-			token = doLogout(httpSession, token);
+		boolean isLoginRequest = isLoginRequest(httpRequest);
+		boolean isLogoutRequest = isLogoutRequest(httpRequest);
+		boolean isGuestRequest =  (token==null  && !isLoginRequest && !isLogoutRequest);
+		boolean isNormalRequest = (token!=null && !isLoginRequest && !isLogoutRequest);
+		
+
+		if(isLoginRequest) {
+			httpResponse.sendRedirect(buildURLForRedirect(request));
 		}
 		
-		if (token != null) {
+
+		if(isGuestRequest) {
+			getAlfrescoFacade().authenticateAsGuest(httpSession);
+			chain.doFilter(request, response);
+		}
+		
+		if(isLogoutRequest) {
+			doLogout(httpSession, token);
+			httpResponse.sendRedirect(buildURLForRedirect(request));
+		}
+		
+		if (isNormalRequest) {
 			String principal = getOpenSSOClient().getPrincipal(token);
 			if (!getAlfrescoFacade().existUser(principal)) {
 				String email = getOpenSSOClient().getUserAttribute(OpenSSOClientAdapter.ATTR_EMAIL, token);
@@ -80,25 +97,31 @@ public class AlfrescoOpenSSOFilter implements Filter {
 			List<String> groups = getOpenSSOClient().getGroups(token);
 			getAlfrescoFacade().createOrUpdateGroups(principal, groups);
 			getAlfrescoFacade().setAuthenticatedUser(httpRequest, httpSession, principal);
-		} else {
-			httpResponse.sendRedirect(buildURLForRedirect(request));
-			doChain = false;
-		}
-
-		if (doChain) {
 			chain.doFilter(request, response);
-		}
-		logger.debug("End filter for Alfresco-OpenSSO");
-
+		} 
+		
 	}
 
-	private SSOToken doLogout(HttpSession httpSession, SSOToken token) {
+
+	private void doLogout(HttpSession httpSession, SSOToken token) {
 		getOpenSSOClient().destroyToken(token);
 		httpSession.invalidate();
-		token = null;
-		return token;
 	}
 	
+	private boolean isLoginRequest(HttpServletRequest request) {
+		Enumeration parameterNames = request.getParameterNames();
+		while (parameterNames.hasMoreElements()) {
+			String  parameter = (String ) parameterNames.nextElement();
+			String[] string = request.getParameterValues(parameter);
+			for (int i = 0; i < string.length; i++) {
+				if(string[i]!=null && string[i].contains(":login")) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	private boolean isLogoutRequest(HttpServletRequest request) {
 		Enumeration parameterNames = request.getParameterNames();
 		while (parameterNames.hasMoreElements()) {

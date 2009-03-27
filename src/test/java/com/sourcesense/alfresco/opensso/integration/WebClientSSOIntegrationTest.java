@@ -118,9 +118,6 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 	private void logoutFromAlfresco() {
 		selenium.click("logout");
 		selenium.waitForPageToLoad("40000");
-		selenium.open("http://localhost:8080/alfresco/");
-		selenium.waitForPageToLoad("40000");
-		assertTrue(selenium.isTextPresent("Password:"));
 		
 	}
 
@@ -153,6 +150,9 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 
 	private void loginToAlfrescoAs(String user, String passwd) {
 		selenium.open("http://localhost:8080/alfresco/");
+		selenium.waitForPageToLoad("40000");
+		selenium.click("login");
+		selenium.waitForPageToLoad("40000");
 		selenium.type("IDToken1", user);
 		selenium.type("IDToken2", passwd);
 		selenium.click("Login.Submit");

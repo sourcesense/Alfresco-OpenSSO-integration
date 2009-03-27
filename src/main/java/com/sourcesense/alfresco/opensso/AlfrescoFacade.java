@@ -81,11 +81,9 @@ public class AlfrescoFacade {
 		permissionService = (PermissionService) ctx.getBean("permissionService");
 		authenticationService = (AuthenticationService) ctx.getBean("authenticationService");
 		authorityService = (AuthorityService) ctx.getBean("authorityService");
-		
+
 		transactionalHelper = new TransactionalHelper(transactionService);
 	}
-	
-	
 
 	protected void setAuthenticatedUser(HttpServletRequest req, final HttpSession httpSess, final String userName) {
 		authComponent.setCurrentUser(userName);
@@ -123,7 +121,7 @@ public class AlfrescoFacade {
 			}
 
 			private String getNullSafe(String email) {
-				return (email==null||email.isEmpty())?username.concat("@"):email;
+				return (email == null || email.isEmpty()) ? username.concat("@") : email;
 			}
 		});
 	}
@@ -141,7 +139,7 @@ public class AlfrescoFacade {
 	}
 
 	public void createOrUpdateGroups(final String principal, final List<String> groups) {
-		if(groups==null || groups.size()==0) {
+		if (groups == null || groups.size() == 0) {
 			return;
 		}
 		transactionalHelper.doInTransaction(new Transactionable() {
@@ -149,17 +147,31 @@ public class AlfrescoFacade {
 				Set<String> authoritiesForUser = authorityService.getAuthoritiesForUser(principal);
 				for (String authority : authoritiesForUser) {
 					String groupName = authority.substring("GROUP_".length());
-					if(!groups.contains(groupName) && !groupName.equals("EVERYONE")) {
-						authorityService.removeAuthority(authority,principal);
+					if (!groups.contains(groupName) && !groupName.equals("EVERYONE")) {
+						authorityService.removeAuthority(authority, principal);
 					}
 				}
 				for (String group : groups) {
 					String authority = "GROUP_".concat(group);
-					if(!authorityService.authorityExists(authority)) {
+					if (!authorityService.authorityExists(authority)) {
 						authority = authorityService.createAuthority(AuthorityType.GROUP, null, group);
 					}
-					authorityService.addAuthority(authority,principal);
+					authorityService.addAuthority(authority, principal);
 				}
+				return null;
+			}
+		});
+	}
+
+	public void authenticateAsGuest(final HttpSession session) {
+		transactionalHelper.doInTransaction(new Transactionable() {
+			public Object execute() {
+				authenticationService.authenticateAsGuest();
+				NodeRef guestRef = personService.getPerson(PermissionService.GUEST_AUTHORITY);
+				User user = new User(PermissionService.GUEST_AUTHORITY, authenticationService.getCurrentTicket(), guestRef);
+				NodeRef guestHomeRef = (NodeRef) nodeService.getProperty(guestRef, ContentModel.PROP_HOMEFOLDER);
+				user.setHomeSpaceId(guestHomeRef.getId());
+				session.setAttribute(AuthenticationHelper.AUTHENTICATION_USER, user);
 				return null;
 			}
 		});

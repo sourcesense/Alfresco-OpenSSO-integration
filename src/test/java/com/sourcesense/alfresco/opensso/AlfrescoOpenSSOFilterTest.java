@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.alfresco.service.cmr.repository.NodeRef;
+import org.alfresco.web.app.servlet.AuthenticationFilter;
 import org.alfresco.web.bean.repository.User;
 import org.junit.After;
 import org.junit.Before;
@@ -53,6 +54,7 @@ public class AlfrescoOpenSSOFilterTest {
 
 	@Before
 	public void setUp() throws Exception {
+		
 		tester = new ServletTester();
 		tester.setContextPath("/alfresco");
 		tester.addServlet(SimpleServlet.class, "/");
@@ -85,9 +87,8 @@ public class AlfrescoOpenSSOFilterTest {
 	}
 
 	@Test
-	public void shouldRedirectToOpenSSOWhenNotAuthenticated() throws IOException, Exception {
-		HttpTester response = doRequest(ALFRESCO_URL);
-		assertEquals(HTTP_CODE_REDIRECT, response.getStatus());
+	public void shouldRedirectToOpenSSOWhenLoginRequested() throws IOException, Exception {
+		HttpTester response = authenticate();
 		assertTrue(response.getHeader("Location").equals(OPENSSO_LOGIN.concat("?goto=").concat(MOCK_ALFRESCO_URL)));
 		
 		response = doRequest(ALFRESCO_URL);
@@ -123,12 +124,12 @@ public class AlfrescoOpenSSOFilterTest {
 	
 	@Test
 	public void shouldSynchronizeGroups() throws Exception {
-		authenticate();
-		
 		ArrayList<String> groups = new ArrayList<String>();
 		groups.add("group1");
 		
 		alfrescoFilter.setOpenSSOClient(new MockOpenSSOClient(USERNAME, groups));
+		
+		authenticate();
 		
 		doRequest(ALFRESCO_URL);
 		
@@ -160,13 +161,33 @@ public class AlfrescoOpenSSOFilterTest {
 		
 		String responses = tester.getResponses(request.generate());
 		response.parse(responses);
-		
 		assertEquals(HTTP_CODE_REDIRECT, response.getStatus());
 		
 	}
 	
-	private void authenticate() throws IOException, Exception {
-		doRequest(ALFRESCO_URL);
+	@Test
+	public void shouldLoginAsGuest() throws Exception {
+		HttpTester response = doRequest(ALFRESCO_URL);
+		assertEquals(HTTP_CODE_OK, response.getStatus());
+	}
+	
+	private HttpTester authenticate() throws IOException, Exception {
+		HttpTester response = new HttpTester();
+		HttpTester request = new HttpTester();
+
+		request.setMethod("POST");
+		request.setHeader("Host", "localhost");
+		request.setURI(ALFRESCO_URL);
+		request.setVersion("HTTP/1.1");
+		request.setContent("browse%3Aact=browse%3Alogin");
+		request.setHeader("Content-Type", "application/x-www-form-urlencoded");
+		
+		String responses = tester.getResponses(request.generate());
+		response.parse(responses);
+		MockOpenSSOClient openSSOClient =  (MockOpenSSOClient)alfrescoFilter.getOpenSSOClient();
+		openSSOClient.setTokenAlwaysValid();
+		
+		return response;
 	}
 
 	private HttpTester doRequest(String URI) throws IOException, Exception {
@@ -217,6 +238,10 @@ public class AlfrescoOpenSSOFilterTest {
 				NodeRef nodeRef = new NodeRef("workspace://SpacesStore/386f7ece-4127-42b5-8543-3de2e2a20d7e");
 				User user = new User(userName,"ticket", nodeRef);
 				populateSession(httpSess, user);
+			}
+			
+			@Override
+			public void authenticateAsGuest(HttpSession session) {
 			}
 		
 		};

@@ -47,7 +47,6 @@ public class MockOpenSSOClient extends OpenSSOClientAdapter {
 	@Override
 	public synchronized SSOToken createTokenFrom(HttpServletRequest request) {
 		if (tokenInvalid) {
-			tokenInvalid = false;
 			return null;
 		}
 		token = createMock(SSOToken.class);
@@ -72,11 +71,14 @@ public class MockOpenSSOClient extends OpenSSOClientAdapter {
 	@Override
 	public void destroyToken(SSOToken token) {
 		token = null;
-		tokenInvalid = true;
 	}
 
 	public ArrayList<String> getGroups() {
 		return groups;
+	}
+
+	public void setTokenAlwaysValid() {
+		this.tokenInvalid = false;
 	}
 
 }
