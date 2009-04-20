@@ -16,6 +16,8 @@
  */
 package com.sourcesense.alfresco.opensso;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -37,9 +39,9 @@ import com.sun.identity.idm.IdUtils;
  * @author g.fernandes@sourcesense.com
  * 
  */
-public class OpenSSOClientAdapter {
+public class OpenSSOClient {
 
-	private static Log logger = LogFactory.getLog(OpenSSOClientAdapter.class);
+	private static Log logger = LogFactory.getLog(OpenSSOClient.class);
 	
 	public static final String ATTR_UID = "uid";
 	public static final String ATTR_LAST_NAME = "sn";
@@ -49,9 +51,17 @@ public class OpenSSOClientAdapter {
 	public static final String ATTR_TELEFONE = "telephonenumber";
 	public static final String ATTR_GROUPS = "memberof";
 
-	protected SSOTokenManager tokenManager;
+	protected static SSOTokenManager tokenManager;
+	private static OpenSSOClient instance;
+	
+	public static OpenSSOClient instance() {
+		if(instance == null) {
+			instance = new OpenSSOClient();
+		}
+		return instance;
+	}
 
-	public OpenSSOClientAdapter() {
+	protected OpenSSOClient() {
 		try {
 			tokenManager = SSOTokenManager.getInstance();
 		} catch (SSOException e) {
@@ -78,7 +88,49 @@ public class OpenSSOClientAdapter {
 		}
 		return token;
 	}
+	
+	public boolean isValid(String tokenID) {
+		SSOToken token;
+		try {
+			token = tokenManager.createSSOToken(tokenID);
+			tokenManager.validateToken(token);
+			return true;
+		} catch (UnsupportedOperationException e) {
+			e.printStackTrace();
+		} catch (SSOException e) {
+			e.printStackTrace();
+		}
+			return false;		
+	}
+	
+	public SSOToken tokenFromString(String ticket) throws UnsupportedEncodingException {
+		SSOToken token = null;
+		try {
+			
+			String s2 = URLDecoder.decode(ticket,"ISO-8859-1");
+			
+			token = tokenManager.createSSOToken(s2);
+		} catch (UnsupportedOperationException e) {
+			e.printStackTrace();
+		} catch (SSOException e) {
+			e.printStackTrace();
+		}
+		return token;
+	}
+	
 
+	public SSOToken tokenFromRequest(HttpServletRequest request) {
+		SSOToken token = null;	
+		try {
+				token = tokenManager.createSSOToken(request);
+			} catch (UnsupportedOperationException e) {
+				e.printStackTrace();
+			} catch (SSOException e) {
+				e.printStackTrace();
+			}
+		return token;
+	}
+	
 	protected List<String> extractGroupNameFromFQGroup(Set<String> cngroups) {
 		ArrayList<String> groups = new ArrayList<String>();
 		for (String group : cngroups) {

@@ -25,23 +25,30 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.iplanet.sso.SSOToken;
 
-public class MockOpenSSOClient extends OpenSSOClientAdapter {
+public class MockOpenSSOClient extends OpenSSOClient {
 
 	private String username;
 	private ArrayList<String> groups = new ArrayList<String>();
 	private SSOToken token = null;
 	private boolean tokenInvalid = true;
+	
+	
+	public MockOpenSSOClient() {
+		
+	}
 
 	public MockOpenSSOClient(String username) {
-		this.username = username;
+		this.setUsername(username);
 		getGroups().add("RH");
 		getGroups().add("marketing");
 		getGroups().add("administration");
 	}
+	
+	
 
 	public MockOpenSSOClient(String username, ArrayList<String> groups) {
-		this(username);
-		this.groups = groups;
+		this.username = username;
+		this.setGroups(groups);
 	}
 
 	@Override
@@ -55,7 +62,7 @@ public class MockOpenSSOClient extends OpenSSOClientAdapter {
 
 	@Override
 	public String getPrincipal(SSOToken token) {
-		return username;
+		return getUsername();
 	}
 
 	@Override
@@ -79,6 +86,18 @@ public class MockOpenSSOClient extends OpenSSOClientAdapter {
 
 	public void setTokenAlwaysValid() {
 		this.tokenInvalid = false;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setGroups(ArrayList<String> groups) {
+		this.groups = groups;
 	}
 
 }

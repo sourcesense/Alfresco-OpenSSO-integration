@@ -27,12 +27,12 @@ import org.junit.Test;
 
 public class OpenSSOClientAdapterTest {
 
-	private OpenSSOClientAdapter openSSOClientAdapter;
+	private OpenSSOClient openSSOClient;
 	public static HashSet<String> cngroups;
 
 	@Before
 	public void setUp() throws Exception {
-		openSSOClientAdapter = new OpenSSOClientAdapter();
+		openSSOClient = OpenSSOClient.instance();
 	}
 
 	@After
@@ -46,7 +46,7 @@ public class OpenSSOClientAdapterTest {
 		cngroups.add("cn=marketing,ou=groups,dc=opensso,dc=java,dc=net");
 		cngroups.add("cn=RH,ou=groups,dc=opensso,dc=java,dc=net");
 		
-		List<String> groupNames = openSSOClientAdapter.extractGroupNameFromFQGroup(cngroups);
+		List<String> groupNames = openSSOClient.extractGroupNameFromFQGroup(cngroups);
 		
 		assertEquals(3, groupNames.size());
 		assertTrue(groupNames.contains("administration"));

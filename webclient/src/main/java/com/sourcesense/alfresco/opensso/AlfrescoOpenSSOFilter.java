@@ -50,7 +50,7 @@ public class AlfrescoOpenSSOFilter implements Filter {
 	private static Log logger = LogFactory.getLog(AlfrescoOpenSSOFilter.class);
 
 	private String openSSOServerURL;
-	private OpenSSOClientAdapter openSSOClientAdapter;
+	private OpenSSOClient openSSOClient;
 	private AlfrescoFacade alfrescoFacade;
 	private ServletContext servletContext;
 
@@ -89,9 +89,9 @@ public class AlfrescoOpenSSOFilter implements Filter {
 		if (isNormalRequest) {
 			String principal = getOpenSSOClient().getPrincipal(token);
 			if (!getAlfrescoFacade().existUser(principal)) {
-				String email = getOpenSSOClient().getUserAttribute(OpenSSOClientAdapter.ATTR_EMAIL, token);
-				String fullName = getOpenSSOClient().getUserAttribute(OpenSSOClientAdapter.ATTR_FULL_NAME, token);
-				String firstName = getOpenSSOClient().getUserAttribute(OpenSSOClientAdapter.ATTR_LAST_NAME, token);
+				String email = getOpenSSOClient().getUserAttribute(OpenSSOClient.ATTR_EMAIL, token);
+				String fullName = getOpenSSOClient().getUserAttribute(OpenSSOClient.ATTR_FULL_NAME, token);
+				String firstName = getOpenSSOClient().getUserAttribute(OpenSSOClient.ATTR_LAST_NAME, token);
 				getAlfrescoFacade().createUser(principal, email, firstName, fullName);
 			}
 			List<String> groups = getOpenSSOClient().getGroups(token);
@@ -155,11 +155,11 @@ public class AlfrescoOpenSSOFilter implements Filter {
 		return openSSOServerURL;
 	}
 
-	public OpenSSOClientAdapter getOpenSSOClient() {
-		if (openSSOClientAdapter == null) {
-			openSSOClientAdapter = new OpenSSOClientAdapter();
+	public OpenSSOClient getOpenSSOClient() {
+		if(openSSOClient == null) {
+			openSSOClient = OpenSSOClient.instance();
 		}
-		return openSSOClientAdapter;
+		return openSSOClient;
 	}
 
 	public AlfrescoFacade getAlfrescoFacade() {
@@ -173,8 +173,8 @@ public class AlfrescoOpenSSOFilter implements Filter {
 		this.alfrescoFacade = alfrescoFacade;
 	}
 
-	public void setOpenSSOClient(OpenSSOClientAdapter openSSOClientAdapter) {
-		this.openSSOClientAdapter = openSSOClientAdapter;
+	public void setOpenSSOClient(OpenSSOClient openSSOClient) {
+		this.openSSOClient = openSSOClient;
 
 	}
 
