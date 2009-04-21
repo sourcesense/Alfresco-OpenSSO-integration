@@ -7,8 +7,8 @@
 	<version>0.6-SNAPSHOT</version>
 	<name>Alfresco OpenSSO Integration Parent</name>
 	<modules>
-	     <module>webclient</module>
-	     <module>share</module>
+		<module>webclient</module>
+		<module>share</module>
 	</modules>
 	<build>
 		<plugins>
@@ -66,6 +66,7 @@
 	<scm>
 		<connection>scm:svn:https://dev.sourcesense.com/svn/alfresco/sso/opensso/trunk</connection>
 	</scm>
+
 	<repositories>
 		<repository>
 			<id>sourcesense</id>
@@ -90,6 +91,123 @@
 			</releases>
 		</repository>
 	</repositories>
+	<dependencyManagement>
+		<dependencies>
+			<!--  Internal project dependency -->
+			<dependency>
+				<groupId>com.sourcesense.alfresco</groupId>
+				<artifactId>alfresco-opensso</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	<properties>
+		<alfrescoVersion>3.0Stable</alfrescoVersion>
+	</properties>
+	<dependencies>
+		<!--  Alfresco dependencies -->
+		<dependency>
+			<groupId>org.alfresco</groupId>
+			<artifactId>alfresco-repository</artifactId>
+			<version>${alfrescoVersion}</version>
+			<classifier>labs</classifier>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.alfresco</groupId>
+			<artifactId>alfresco-core</artifactId>
+			<version>${alfrescoVersion}</version>
+			<classifier>labs</classifier>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.alfresco</groupId>
+			<artifactId>alfresco-mbeans</artifactId>
+			<version>${alfrescoVersion}</version>
+			<classifier>labs</classifier>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.alfresco</groupId>
+			<artifactId>alfresco-remote-api</artifactId>
+			<version>${alfrescoVersion}</version>
+			<classifier>labs</classifier>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.alfresco</groupId>
+			<artifactId>alfresco-web-client</artifactId>
+			<version>${alfrescoVersion}</version>
+			<classifier>labs</classifier>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.alfresco</groupId>
+			<artifactId>alfresco-web-framework</artifactId>
+			<version>${alfrescoVersion}</version>
+			<classifier>labs</classifier>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.alfresco</groupId>
+			<artifactId>alfresco-webscript-framework</artifactId>
+			<version>${alfrescoVersion}</version>
+			<classifier>labs</classifier>
+		</dependency>
+
+		<!-- OpenSSO dependencies -->
+		<dependency>
+			<groupId>com.sun.identity</groupId>
+			<artifactId>openssoclientsdk</artifactId>
+			<version>8.0</version>
+		</dependency>
+
+		<!--  Spring and related dependencies -->
+		<dependency>
+			<groupId>acegisecurity</groupId>
+			<artifactId>acegi-security</artifactId>
+			<version>0.8.2</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring</artifactId>
+			<version>2.0.6</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<version>2.5.5</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.j2ee</groupId>
+			<artifactId>j2ee</artifactId>
+			<version>5.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!--  Test frameworks -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.5</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.easymock</groupId>
+			<artifactId>easymockclassextension</artifactId>
+			<version>2.4</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.openqa.selenium.client-drivers</groupId>
+			<artifactId>selenium-java-client-driver</artifactId>
+			<version>1.0-beta-1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 	<distributionManagement>
 		<repository>
 			<id>releases</id>

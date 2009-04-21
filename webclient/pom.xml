@@ -4,24 +4,14 @@
 	<groupId>com.sourcesense.alfresco</groupId>
 	<artifactId>alfresco-opensso-webclient</artifactId>
 	<packaging>jar</packaging>
-	<version>0.6-SNAPSHOT</version>
 	<name>Alfresco OpenSSO WebClient Integration</name>
 	<parent>
-	     <groupId>com.sourcesense.alfresco</groupId>
-	     <artifactId>alfresco-opensso-parent</artifactId>
-             <version>0.6-SNAPSHOT</version>
+		<groupId>com.sourcesense.alfresco</groupId>
+		<artifactId>alfresco-opensso-parent</artifactId>
+		<version>0.6-SNAPSHOT</version>
 	</parent>
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.5</source>
-					<target>1.5</target>
-					<encoding>UTF-8</encoding>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -47,21 +37,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<artifactId>maven-clean-plugin</artifactId>
-				<configuration>
-					<filesets>
-						<fileset>
-							<directory>.</directory>
-							<includes>
-								<include>alf*</include>
-								<include>*.log</include>
-							</includes>
-							<followSymlinks>false</followSymlinks>
-						</fileset>
-					</filesets>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
 	<scm>
@@ -69,136 +44,12 @@
 	</scm>
 	<dependencies>
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.5</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.easymock</groupId>
-			<artifactId>easymockclassextension</artifactId>
-			<version>2.4</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.mortbay.jetty</groupId>
 			<artifactId>jetty-servlet-tester</artifactId>
 			<version>6.1.6</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.sun.identity</groupId>
-			<artifactId>openssoclientsdk</artifactId>
-			<version>8.0</version>
-		</dependency>
-		<dependency>
-			<groupId>javax.j2ee</groupId>
-			<artifactId>j2ee</artifactId>
-			<version>5.0</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.alfresco</groupId>
-			<artifactId>alfresco-repository</artifactId>
-			<version>3.0</version>
-			<classifier>labs</classifier>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.alfresco</groupId>
-			<artifactId>alfresco-core</artifactId>
-			<version>3.0</version>
-			<classifier>labs</classifier>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.alfresco</groupId>
-			<artifactId>alfresco-webscript-framework</artifactId>
-			<version>3.0Stable</version>
-			<classifier>labs</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.alfresco</groupId>
-			<artifactId>alfresco-web-client</artifactId>
-			<version>3.0Stable</version>
-			<classifier>labs</classifier>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.alfresco</groupId>
-			<artifactId>alfresco-remote-api</artifactId>
-			<version>3.0Stable</version>
-			<classifier>labs</classifier>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.alfresco</groupId>
-			<artifactId>alfresco-mbeans</artifactId>
-			<version>3.0Stable</version>
-			<classifier>labs</classifier>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring</artifactId>
-			<version>2.0.6</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>acegisecurity</groupId>
-			<artifactId>acegi-security</artifactId>
-			<version>0.8.2</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-test</artifactId>
-			<version>2.5.5</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.openqa.selenium.client-drivers</groupId>
-			<artifactId>selenium-java-client-driver</artifactId>
-			<version>1.0-beta-1</version>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
-	<repositories>
-		<repository>
-			<id>sourcesense</id>
-			<name>Sourcesense Alfresco Archetypes</name>
-			<url>http://repository.sourcesense.com/nexus/content/repositories/releases/</url>
-		</repository>
-		<repository>
-			<id>sourcesense-3rd party</id>
-			<name>Sourcesense 3rd Party artifacts</name>
-			<url>http://repository.sourcesense.com/nexus/content/repositories/thirdparty/</url>
-		</repository>
-		<repository>
-			<id>openqa-releases</id>
-			<name>Openqa Release Repository</name>
-			<url>http://nexus.openqa.org/content/repositories/releases</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-	</repositories>
-	<distributionManagement>
-		<repository>
-			<id>releases</id>
-			<name>Sourcesense public repo</name>
-			<url>http://repository.sourcesense.com/nexus/content/repositories/releases</url>
-		</repository>
-		<snapshotRepository>
-			<id>snapshots</id>
-			<name>Sourcesense public snapshot repo</name>
-			<url>http://repository.sourcesense.com/nexus/content/repositories/snapshots</url>
-		</snapshotRepository>
-	</distributionManagement>
 	<profiles>
 		<profile>
 			<id>integration</id>
@@ -274,7 +125,6 @@
 								</resource>
 							</webResources>
 						</configuration>
-
 					</plugin>
 					<plugin>
 						<groupId>org.mortbay.jetty</groupId>
@@ -290,7 +140,6 @@
 									<maxIdleTime>60000</maxIdleTime>
 								</connector>
 							</connectors>
-
 						</configuration>
 						<executions>
 							<execution>

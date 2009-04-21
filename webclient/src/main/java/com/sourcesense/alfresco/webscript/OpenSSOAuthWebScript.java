@@ -1,7 +1,6 @@
 package com.sourcesense.alfresco.webscript;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.alfresco.repo.security.authentication.AuthenticationComponent;
 import org.alfresco.repo.web.scripts.bean.Login;
 import org.alfresco.service.cmr.security.AuthenticationService;
+import org.alfresco.util.URLDecoder;
 import org.alfresco.web.scripts.Status;
 import org.alfresco.web.scripts.WebScriptException;
 import org.alfresco.web.scripts.WebScriptRequest;
@@ -56,12 +56,7 @@ public class OpenSSOAuthWebScript extends Login {
 			throw new WebScriptException(HttpServletResponse.SC_BAD_REQUEST, "Password not specified");
 		}
 
-		String decodedURL = null;
-		try {
-			decodedURL = URLDecoder.decode(password, "ISO-8859-1");
-		} catch (UnsupportedEncodingException e1) {
-			e1.printStackTrace();
-		}
+		String decodedURL = URLDecoder.decode(password);
 		
 		SSOTokenManager tokenManager;
 		boolean isValid = false;
