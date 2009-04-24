@@ -40,7 +40,7 @@
 		</plugins>
 	</build>
 	<scm>
-		<connection>scm:svn:https://dev.sourcesense.com/svn/alfresco/sso/opensso/trunk</connection>
+		<connection>scm:svn:https://dev.sourcesense.com/svn/alfresco/sso/opensso/trunk/webclient</connection>
 	</scm>
 	<dependencies>
 		<dependency>
