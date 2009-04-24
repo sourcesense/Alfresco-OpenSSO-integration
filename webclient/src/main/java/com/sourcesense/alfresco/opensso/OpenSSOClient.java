@@ -16,8 +16,6 @@
  */
 package com.sourcesense.alfresco.opensso;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -89,27 +87,14 @@ public class OpenSSOClient {
 		return token;
 	}
 	
-	public boolean isValid(String tokenID) {
-		SSOToken token;
-		try {
-			token = tokenManager.createSSOToken(tokenID);
-			tokenManager.validateToken(token);
-			return true;
-		} catch (UnsupportedOperationException e) {
-			e.printStackTrace();
-		} catch (SSOException e) {
-			e.printStackTrace();
-		}
-			return false;		
+	public boolean isValid(SSOToken tokenID) {
+		return tokenManager.isValidToken(tokenID);
 	}
 	
-	public SSOToken tokenFromString(String ticket) throws UnsupportedEncodingException {
+	public SSOToken tokenFromString(String ticket)  {
 		SSOToken token = null;
 		try {
-			
-			String s2 = URLDecoder.decode(ticket,"ISO-8859-1");
-			
-			token = tokenManager.createSSOToken(s2);
+			token = tokenManager.createSSOToken(ticket);
 		} catch (UnsupportedOperationException e) {
 			e.printStackTrace();
 		} catch (SSOException e) {

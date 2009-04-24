@@ -32,7 +32,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 	public void setUp() throws Exception {
 		Properties properties = new Properties();
 		properties.load(getClass().getClassLoader().getResourceAsStream("AMConfig.properties"));
-		agent_login = (String) properties.get("com.sun.identity.agents.app.username");
+		this.agent_login = (String) properties.get("com.sun.identity.agents.app.username");
 		agent_password = (String) properties.get("com.iplanet.am.service.password");
 		String openssoNaming = (String) properties.get("com.iplanet.am.naming.url");
 		opensso_url = openssoNaming.substring(0, openssoNaming.lastIndexOf('/')).concat("/UI/Login");
@@ -47,7 +47,56 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		}
 	}
 	
+	@Test
+	public void testWebScriptIntegration() throws InterruptedException {
+		loginToOpenSSOConsoleAsAmAdmin();
+		createUserWithLoginAndPass("opensso3");
+		createUserWithLoginAndPass("admin");
+		
+		logoutFromOpenSSODomain();
 	
+		callNoneAuthWebScript();
+		assertTrue(selenium.isTextPresent("Alfresco Person Search"));
+		
+		loginToAlfrescoAs("opensso3","opensso3");
+		
+		callGuestWebScript();
+		assertTrue(selenium.isTextPresent("Alfresco Keyword Search"));
+		
+		callUserWebScript();
+		assertTrue(selenium.isTextPresent("Tagging Test UI"));
+		
+		callAdminWebScript();
+		assertTrue(selenium.isTextPresent("Unauthorized"));
+		
+		logoutFromOpenSSODomain();
+		
+		loginToAlfrescoAs("admin", "admin");
+		
+		
+		callAdminWebScript();
+		assertTrue(!selenium.isTextPresent("Unauthorized"));
+		assertTrue(selenium.isTextPresent("Web Scripts Installer"));
+		
+		
+	}
+	
+	private void callNoneAuthWebScript() {
+		selenium.open("http://localhost:8080/alfresco/service/api/search/engines");
+	}
+
+	private void callGuestWebScript() {
+		selenium.open("http://localhost:8080/alfresco/service/api/search/keyword.html?q=readme.html&guest=true");
+	}
+
+	private void callUserWebScript() {
+		selenium.open("http://localhost:8080/alfresco/service/collaboration/tagActions");
+	}
+
+	private void callAdminWebScript() {
+		selenium.open("http://localhost:8080/alfresco/service/installer");
+	}
+
 	@Test
 	public void testSSO() throws Exception {
 		loginToOpenSSOConsoleAsAmAdmin();
@@ -206,14 +255,13 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		selenium.type("Entities.tfFilter", "opensso*");
 		selenium.click("Entities.btnSearch");
 		selenium.waitForPageToLoad("40000");
-		selenium.click("Entities.tblSearch.SelectionCheckbox0");
-		selenium.click("Entities.tblSearch.SelectionCheckbox1");
+		selenium.click("Entities.tblSearch.SelectAllImage");
 		selenium.click("Entities.tblButtonDelete");
 		selenium.waitForPageToLoad("40000");
 		selenium.type("Entities.tfFilter", "admin");
 		selenium.click("Entities.btnSearch");
 		selenium.waitForPageToLoad("40000");
-		selenium.click("Entities.tblSearch.SelectionCheckbox0");
+		selenium.click("Entities.tblSearch.SelectAllImage");
 		selenium.click("Entities.tblButtonDelete");
 		selenium.waitForPageToLoad("40000");
 		selenium.click("link=Group");

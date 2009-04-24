@@ -7,4 +7,8 @@
 		<property name="authenticationService" ref="authenticationService" />
 		<property name="authenticationComponent" ref="authenticationComponent" />
 	</bean>
+    <bean id="webscripts.authenticator.basic" class="com.sourcesense.alfresco.webscript.OpenSSOAuthenticationFactory">
+       <property name="authenticationService" ref="AuthenticationService" />
+       <property name="authenticationComponent" ref="authenticationComponent" />
+   </bean>
 </beans>

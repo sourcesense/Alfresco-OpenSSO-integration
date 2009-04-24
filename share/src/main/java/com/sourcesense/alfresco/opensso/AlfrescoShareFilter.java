@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.alfresco.config.ConfigService;
 import org.alfresco.connector.User;
 import org.alfresco.web.site.AuthenticationUtil;
 import org.alfresco.web.site.FrameworkHelper;
@@ -45,8 +44,6 @@ import com.iplanet.sso.SSOToken;
 
 public class AlfrescoShareFilter  implements Filter {
 	private static Log logger = LogFactory.getLog(AlfrescoShareFilter.class);
-
-	private OpenSSOClient openSSOClient;
 
 	private String openSSOServerURL;
 
@@ -70,7 +67,6 @@ public class AlfrescoShareFilter  implements Filter {
 
 	public void init(FilterConfig config) throws ServletException {
 		ApplicationContext context = WebApplicationContextUtils.getRequiredWebApplicationContext(config.getServletContext());
-		ConfigService configService = (ConfigService) context.getBean("web.config");
 		this.openSSOServerURL = config.getInitParameter("opensso.url");
 	}
 
@@ -105,13 +101,7 @@ public class AlfrescoShareFilter  implements Filter {
 		}
 	}
 
-	protected void createUserEnvironment(HttpSession session, String principal) {
-		
-	}
-
-	public void destroy() {
-	}
-
+	public void destroy() {	}
 
 
 }

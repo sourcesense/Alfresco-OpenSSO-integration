@@ -37,7 +37,7 @@ Debug webclient embedded in jetty in debug mode (port 8000):
 $ mvnDebug -Pintegration jetty:run-exploded
 
 Run selenium server (usefull for debugging integration test from eclipse) 
-$ mvn selenium:start-server
+$ mvn -Pintegration selenium:start-server
 
 Run integration tests ( *external running openSSO required*; will launch selenium-server and alfresco)
 $ mvn -Pintegration install
