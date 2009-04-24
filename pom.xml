@@ -104,7 +104,7 @@
 			<!--  Internal project dependency -->
 			<dependency>
 				<groupId>com.sourcesense.alfresco</groupId>
-				<artifactId>alfresco-opensso</artifactId>
+				<artifactId>alfresco-opensso-webclient</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>

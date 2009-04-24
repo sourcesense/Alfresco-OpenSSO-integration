@@ -16,7 +16,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.sourcesense.alfresco</groupId>
-			<artifactId>alfresco-opensso</artifactId>
+			<artifactId>alfresco-opensso-webclient</artifactId>
 		</dependency>
 	</dependencies>
 	<profiles>
