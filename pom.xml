@@ -4,7 +4,7 @@
 	<groupId>com.sourcesense.alfresco</groupId>
 	<artifactId>alfresco-opensso-parent</artifactId>
 	<packaging>pom</packaging>
-	<version>0.6</version>
+	<version>0.6-SNAPSHOT</version>
 	<name>Alfresco OpenSSO Integration Parent</name>
 	<modules>
 		<module>webclient</module>
@@ -72,7 +72,7 @@
 		</plugins>
 	</build>
 	<scm>
-		<connection>scm:svn:https://dev.sourcesense.com/svn/alfresco/sso/opensso/tags/alfresco-opensso-0.6</connection>
+		<connection>scm:svn:https://dev.sourcesense.com/svn/alfresco/sso/opensso/trunk</connection>
 	</scm>
 
 	<repositories>
