@@ -105,7 +105,7 @@
 			<dependency>
 				<groupId>com.sourcesense.alfresco</groupId>
 				<artifactId>alfresco-opensso</artifactId>
-				<version>0.6-SNAPSHOT</version>
+				<version>${project.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
