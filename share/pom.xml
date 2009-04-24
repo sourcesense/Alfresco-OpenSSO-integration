@@ -8,10 +8,10 @@
 	<parent>
 		<groupId>com.sourcesense.alfresco</groupId>
 		<artifactId>alfresco-opensso-parent</artifactId>
-		<version>0.6</version>
+		<version>0.7-SNAPSHOT</version>
 	</parent>
 	<scm>
-	        <connection>scm:svn:https://dev.sourcesense.com/svn/alfresco/sso/opensso/tags/alfresco-opensso-0.6/share</connection>
+	        <connection>scm:svn:https://dev.sourcesense.com/svn/alfresco/sso/opensso/trunk/share</connection>
         </scm>
 	<dependencies>
 		<dependency>
