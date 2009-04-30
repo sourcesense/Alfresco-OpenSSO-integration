@@ -16,7 +16,8 @@
  */
 package com.sourcesense.alfresco.opensso;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
 import java.util.List;
@@ -25,7 +26,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class OpenSSOClientAdapterTest {
+import com.iplanet.am.util.SystemProperties;
+
+
+public class OpenSSOClientTest {
 
 	private OpenSSOClient openSSOClient;
 	public static HashSet<String> cngroups;
@@ -53,6 +57,13 @@ public class OpenSSOClientAdapterTest {
 		assertTrue(groupNames.contains("marketing"));
 		assertTrue(groupNames.contains("RH"));
 		
+	}
+	
+	@Test
+	public void shouldGetLoginURL() throws Exception {
+		SystemProperties.initializeProperties("com.iplanet.am.naming.url","http://sample.com/ctx/namingservice");
+		String loginURL = openSSOClient.getOpenSSOLoginURL();
+		assertEquals("http://sample.com/ctx/UI/Login", loginURL);
 	}
 
 }

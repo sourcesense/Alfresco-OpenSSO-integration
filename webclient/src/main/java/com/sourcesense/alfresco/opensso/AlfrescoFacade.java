@@ -81,11 +81,11 @@ public class AlfrescoFacade {
 		permissionService = (PermissionService) ctx.getBean("permissionService");
 		authenticationService = (AuthenticationService) ctx.getBean("authenticationService");
 		authorityService = (AuthorityService) ctx.getBean("authorityService");
-
 		transactionalHelper = new TransactionalHelper(transactionService);
 	}
 
 	protected void setAuthenticatedUser(HttpServletRequest req, final HttpSession httpSess, final String userName) {
+		authenticationService.clearCurrentSecurityContext();
 		authComponent.setCurrentUser(userName);
 		transactionalHelper.doInTransaction(new Transactionable() {
 			public Object execute() {

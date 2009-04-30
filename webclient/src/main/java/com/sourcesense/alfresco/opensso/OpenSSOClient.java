@@ -16,6 +16,8 @@
  */
 package com.sourcesense.alfresco.opensso;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -28,8 +30,10 @@ import org.apache.commons.logging.LogFactory;
 import com.iplanet.sso.SSOException;
 import com.iplanet.sso.SSOToken;
 import com.iplanet.sso.SSOTokenManager;
+import com.sun.identity.configuration.SystemProperties;
 import com.sun.identity.idm.IdRepoException;
 import com.sun.identity.idm.IdUtils;
+import com.sun.identity.shared.configuration.SystemPropertiesManager;
 
 /**
  * Adapter of OpenSSO client SDK
@@ -48,6 +52,7 @@ public class OpenSSOClient {
 	public static final String ATTR_HOME_ADDRESS = "postaladdress";
 	public static final String ATTR_TELEFONE = "telephonenumber";
 	public static final String ATTR_GROUPS = "memberof";
+	public static final String NAMING_URL_PROPERTY = "com.iplanet.am.naming.url";
 
 	protected static SSOTokenManager tokenManager;
 	private static OpenSSOClient instance;
@@ -66,7 +71,13 @@ public class OpenSSOClient {
 			logger.error("Error obtained SSOTOkenManager instance");
 		}
 	}
-
+	
+	
+	public static String getOpenSSOLoginURL() {
+		String propNaming = SystemPropertiesManager.get(NAMING_URL_PROPERTY);
+		return propNaming.replaceAll("namingservice", "UI/Login");
+	}
+	
 	/**
 	 * Tries to create an SSOToken based on the HTTP request
 	 * 

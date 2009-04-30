@@ -16,7 +16,10 @@
  */
 package com.sourcesense.alfresco.webscript;
 
+import java.io.IOException;
+
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.alfresco.repo.security.authentication.AuthenticationComponent;
 import org.alfresco.repo.security.authentication.AuthenticationException;
@@ -62,14 +65,23 @@ public class OpenSSOAuthenticationFactory implements ServletAuthenticatorFactory
 		private OpenSSOClient openSSOClient = OpenSSOClient.instance();
 		
 		private WebScriptServletRequest servletReq;
+		private WebScriptServletResponse servletRes;
 
 
 		public OpenSSOAuthenticator(WebScriptServletRequest req, WebScriptServletResponse res) {
 			this.servletReq = req;
+			this.servletRes = res;
 		}
-
+		
+		public String getThisURL(HttpServletRequest request) {
+			return request.getServletPath() + request.getPathInfo();
+			
+			
+		}
+		
 		public boolean authenticate(RequiredAuthentication required, boolean isGuest) {
 			HttpServletRequest httpServletRequest = servletReq.getHttpServletRequest();
+			HttpServletResponse httpServletResponse = servletRes.getHttpServletResponse();
 			String ticket = httpServletRequest.getParameter("alf_ticket");
 			
             if (isGuest && RequiredAuthentication.guest == required) {
@@ -90,7 +102,15 @@ public class OpenSSOAuthenticationFactory implements ServletAuthenticatorFactory
 
 			SSOToken token = openSSOClient.createTokenFrom(httpServletRequest);
 			
-			if(token==null) return false;
+			if(token==null) {
+				try {
+					String redirectURL = "?goto=".concat(httpServletRequest.getRequestURL().toString());
+					httpServletResponse.sendRedirect(OpenSSOClient.getOpenSSOLoginURL().concat(redirectURL));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return false;
+			}
 			
 			String principal = openSSOClient.getPrincipal(token);
 			

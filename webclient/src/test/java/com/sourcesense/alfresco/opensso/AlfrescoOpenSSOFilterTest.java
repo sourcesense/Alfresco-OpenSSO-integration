@@ -16,7 +16,9 @@
  */
 package com.sourcesense.alfresco.opensso;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,7 +29,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.alfresco.service.cmr.repository.NodeRef;
-import org.alfresco.web.app.servlet.AuthenticationFilter;
 import org.alfresco.web.bean.repository.User;
 import org.junit.After;
 import org.junit.Before;
@@ -43,8 +44,7 @@ public class AlfrescoOpenSSOFilterTest {
 
 	private static final String ALFRESCO_URL = "/alfresco/";
 	private static final String MOCK_ALFRESCO_URL = "http://localhost:80/alfresco";
-	private static final String OPENSSO_URL = "http://server.domain/opensso";
-	private static final String OPENSSO_LOGIN = OPENSSO_URL + "/UI/Login";
+	private static final String OPENSSO_LOGIN =  OpenSSOClient.getOpenSSOLoginURL();
 	private static final String USERNAME = "user1";
 	private static final int HTTP_CODE_OK = 200;
 	private static final int HTTP_CODE_REDIRECT = 302;
@@ -59,7 +59,6 @@ public class AlfrescoOpenSSOFilterTest {
 		tester.setContextPath("/alfresco");
 		tester.addServlet(SimpleServlet.class, "/");
 		FilterHolder filterHolder = tester.addFilter(AlfrescoOpenSSOFilter.class, "/*", 1);
-		filterHolder.setInitParameter("opensso.url", OPENSSO_URL);
 		tester.addFilter(SimpleFilter.class, "/*", 1);
 		tester.start();
 
@@ -95,11 +94,6 @@ public class AlfrescoOpenSSOFilterTest {
 		assertEquals(HTTP_CODE_OK, response.getStatus());
 	}
 
-	@Test
-	public void testGetOpenSSOServerURL() throws Exception {
-		assertEquals(OPENSSO_URL, alfrescoFilter.getOpenSSOServerURL());
-
-	}
 
 	@Test
 	public void shouldCreateUserInAlfresco() throws Exception {

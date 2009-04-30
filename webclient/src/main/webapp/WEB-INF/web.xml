@@ -100,10 +100,6 @@
    <filter>
       <filter-name>Authentication Filter</filter-name>
       <filter-class>com.sourcesense.alfresco.opensso.AlfrescoOpenSSOFilter</filter-class>
-          <init-param>
-	       <param-name>opensso.url</param-name>
-	       <param-value>http://localhost:9090/opensso</param-value>
-          </init-param>
    </filter>
 
    <!--<filter>

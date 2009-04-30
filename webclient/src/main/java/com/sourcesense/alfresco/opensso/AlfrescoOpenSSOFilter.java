@@ -31,8 +31,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.alfresco.web.app.servlet.AuthenticationFilter;
-import org.alfresco.web.app.servlet.AuthenticationHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -49,7 +47,6 @@ public class AlfrescoOpenSSOFilter implements Filter {
 
 	private static Log logger = LogFactory.getLog(AlfrescoOpenSSOFilter.class);
 
-	private String openSSOServerURL;
 	private OpenSSOClient openSSOClient;
 	private AlfrescoFacade alfrescoFacade;
 	private ServletContext servletContext;
@@ -100,6 +97,8 @@ public class AlfrescoOpenSSOFilter implements Filter {
 			chain.doFilter(request, response);
 		} 
 		
+		
+		
 	}
 
 
@@ -137,12 +136,11 @@ public class AlfrescoOpenSSOFilter implements Filter {
 	}
 
 	public void init(FilterConfig config) throws ServletException {
-		openSSOServerURL = config.getInitParameter("opensso.url");
 		servletContext = config.getServletContext();
 	}
 
 	protected String getOpenSSOLoginURL() {
-		return getOpenSSOServerURL() + "/UI/Login";
+		return OpenSSOClient.getOpenSSOLoginURL();
 	}
 
 	protected String buildURLForRedirect(ServletRequest request) {
@@ -151,9 +149,6 @@ public class AlfrescoOpenSSOFilter implements Filter {
 		return getOpenSSOLoginURL().concat("?goto=").concat(serverURL).concat(alfrescoContext);
 	}
 
-	public String getOpenSSOServerURL() {
-		return openSSOServerURL;
-	}
 
 	public OpenSSOClient getOpenSSOClient() {
 		if(openSSOClient == null) {

@@ -22,10 +22,6 @@
    <filter>
       <filter-name>Authentication Filter</filter-name>
       <filter-class>com.sourcesense.alfresco.opensso.AlfrescoShareFilter</filter-class>
-      <init-param>
-      	    <param-name>opensso.url</param-name>
-	    <param-value>http://localhost:9090/opensso</param-value>
-       </init-param>
    </filter>
 
 
@@ -40,6 +36,10 @@
    <filter-mapping>
         <filter-name>Authentication Filter</filter-name>
         <url-pattern>/s/*</url-pattern>
+   </filter-mapping>
+   <filter-mapping>
+        <filter-name>Authentication Filter</filter-name>
+        <url-pattern>/logout/*</url-pattern>
    </filter-mapping>
 
    

@@ -37,15 +37,11 @@ import org.alfresco.web.site.UserFactory;
 import org.alfresco.web.site.exception.RequestContextException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.iplanet.sso.SSOToken;
 
 public class AlfrescoShareFilter  implements Filter {
 	private static Log logger = LogFactory.getLog(AlfrescoShareFilter.class);
-
-	private String openSSOServerURL;
 
 	public OpenSSOClient getOpenSSOClient() {
 		return OpenSSOClient.instance();
@@ -58,21 +54,27 @@ public class AlfrescoShareFilter  implements Filter {
 	}
 
 	protected String getOpenSSOLoginURL() {
-		return getOpenSSOServerURL() + "/UI/Login";
-	}
-
-	public String getOpenSSOServerURL() {
-		return openSSOServerURL;
+		return OpenSSOClient.getOpenSSOLoginURL();
 	}
 
 	public void init(FilterConfig config) throws ServletException {
-		ApplicationContext context = WebApplicationContextUtils.getRequiredWebApplicationContext(config.getServletContext());
-		this.openSSOServerURL = config.getInitParameter("opensso.url");
+	}
+	
+	private void doLogout(HttpSession httpSession, SSOToken token) {
+		getOpenSSOClient().destroyToken(token);
 	}
 
 	public void doFilter(ServletRequest sreq, ServletResponse sresp, FilterChain chain) throws IOException, ServletException {
 		HttpServletRequest req = (HttpServletRequest) sreq;
 		HttpServletResponse res = (HttpServletResponse) sresp;
+		HttpSession httpSession = req.getSession();
+		
+		SSOToken token = getOpenSSOClient().tokenFromRequest(req);
+
+		if(isLogoutRequest(sreq)) {
+			doLogout(httpSession, token);
+			res.sendRedirect(buildURLForRedirect(sreq));
+		}
 		
 		try {
 			RequestContext context = RequestUtil.getRequestContext(req);
@@ -85,7 +87,6 @@ public class AlfrescoShareFilter  implements Filter {
 			e.printStackTrace();
 		}
 
-		SSOToken token = getOpenSSOClient().tokenFromRequest(req);
 
 		if (token == null) {
 			res.sendRedirect(buildURLForRedirect(req));
@@ -99,6 +100,14 @@ public class AlfrescoShareFilter  implements Filter {
 			chain.doFilter(sreq, sresp);
 			return;
 		}
+	}
+
+	private boolean isLogoutRequest(ServletRequest sreq) {
+		HttpServletRequest req = (HttpServletRequest) sreq;
+		if(req.getServletPath().contains("logout")) {
+			return true;
+		}
+		return false;
 	}
 
 	public void destroy() {	}
