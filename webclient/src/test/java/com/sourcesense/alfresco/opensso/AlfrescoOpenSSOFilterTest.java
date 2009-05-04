@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.alfresco.service.cmr.repository.NodeRef;
@@ -227,12 +228,14 @@ public class AlfrescoOpenSSOFilterTest {
 				groups.put(principal, openSSOGroups);
 			}
 			
+			
 			@Override
-			protected void setAuthenticatedUser(HttpServletRequest req, HttpSession httpSess, String userName) {
+			protected void setAuthenticatedUser(HttpServletRequest req, HttpServletResponse res, HttpSession httpSess, String userName) {
 				NodeRef nodeRef = new NodeRef("workspace://SpacesStore/386f7ece-4127-42b5-8543-3de2e2a20d7e");
 				User user = new User(userName,"ticket", nodeRef);
 				populateSession(httpSess, user);
 			}
+			
 			
 			@Override
 			public void authenticateAsGuest(HttpSession session) {

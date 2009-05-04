@@ -41,6 +41,16 @@
 							<archive>
 								<addMavenDescriptor>false</addMavenDescriptor>
 							</archive>
+							<webResources>
+								<resource>
+									<directory>${project.build.testOutputDirectory}</directory>
+									<targetPath>WEB-INF/classes</targetPath>
+									<filtering>true</filtering>
+									<includes>
+										<include>**</include>
+									</includes>
+								</resource>
+							</webResources>
 						</configuration>
 					</plugin>
 					<plugin>

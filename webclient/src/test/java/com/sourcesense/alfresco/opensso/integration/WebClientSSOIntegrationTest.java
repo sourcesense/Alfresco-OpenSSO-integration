@@ -16,12 +16,19 @@
  */
 package com.sourcesense.alfresco.opensso.integration;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Properties;
 
+import org.alfresco.util.URLEncoder;
 import org.junit.Test;
+import org.xml.sax.SAXException;
 
+import com.meterware.httpunit.GetMethodWebRequest;
+import com.meterware.httpunit.WebConversation;
+import com.meterware.httpunit.WebRequest;
+import com.meterware.httpunit.WebResponse;
 import com.thoughtworks.selenium.SeleneseTestCase;
-import com.thoughtworks.selenium.SeleniumException;
 
 public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 
@@ -38,49 +45,89 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		opensso_url = openssoNaming.substring(0, openssoNaming.lastIndexOf('/')).concat("/UI/Login");
 
 		setUp(opensso_url, "*firefox3");
-		
-		try {
-			loginToOpenSSOConsoleAsAmAdmin();
-			deleteUsersAndGroups();
-		} catch (SeleniumException ex) {
-			System.out.println("Groups and Users already cleaned");
-		}
 	}
-	
+
+	@Test
+	public void testSURFIntegration() throws Exception {
+		loginToAlfrescoAs("amAdmin","amAdmin");
+		String token = getSSOTokenFromCookie();
+		String encodedToken = URLEncoder.encode(token);
+		String ticket = callLoginWebScript(encodedToken);
+		assertTrue(ticket.contains("<ticket>TICKET_"));
+
+	}
+
+	private String callLoginWebScript(String encodedToken) {
+		String loginWebScript = "http://localhost:8080/alfresco/s/api/login?u=amAdmin&pw=".concat(encodedToken);
+		WebConversation wc = new WebConversation();
+	    WebRequest req = new GetMethodWebRequest(loginWebScript);
+	    WebResponse resp;
+		try {
+			resp = wc.getResponse(req);
+			return resp.getText();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (SAXException e) {
+			e.printStackTrace();
+		}
+		return loginWebScript;
+	}
+
+	private String getSSOTokenFromCookie() {
+		String allCookies = selenium.getCookie();
+		String[] cookies = allCookies.split(";");
+		for (int i = 0; i < cookies.length; i++) {
+			if (cookies[i].contains("=\"")) {
+				String[] cookie = cookies[i].split("=\"");
+				String cookieName = cookie[0].trim();
+				String cookieValue = cookie[1];
+				if (cookieName.equalsIgnoreCase("iPlanetDirectoryPro")) {
+					return cookieValue.substring(0,cookieValue.length()-1);
+				}
+			}
+		}
+		return null;
+	}
+
 	@Test
 	public void testWebScriptIntegration() throws InterruptedException {
+		
+		loginToOpenSSOConsoleAsAmAdmin();
+		deleteUsersAndGroups();
+
+		logoutFromOpenSSODomain();
 		loginToOpenSSOConsoleAsAmAdmin();
 		createUserWithLoginAndPass("opensso3");
 		createUserWithLoginAndPass("admin");
-		
+
 		logoutFromOpenSSODomain();
-	
+
 		callNoneAuthWebScript();
 		assertTrue(selenium.isTextPresent("Alfresco Person Search"));
-		
-		loginToAlfrescoAs("opensso3","opensso3");
-		
+
+		loginToAlfrescoAs("opensso3", "opensso3");
+
 		callGuestWebScript();
 		assertTrue(selenium.isTextPresent("Alfresco Keyword Search"));
-		
+
 		callUserWebScript();
 		assertTrue(selenium.isTextPresent("Tagging Test UI"));
-		
+
 		callAdminWebScript();
 		assertTrue(selenium.isTextPresent("Unauthorized"));
-		
+
 		logoutFromOpenSSODomain();
-		
+
 		loginToAlfrescoAs("admin", "admin");
-		
-		
+
 		callAdminWebScript();
 		assertTrue(!selenium.isTextPresent("Unauthorized"));
 		assertTrue(selenium.isTextPresent("Web Scripts Installer"));
-		
-		
+
 	}
-	
+
 	private void callNoneAuthWebScript() {
 		selenium.open("http://localhost:8080/alfresco/service/api/search/engines");
 	}
@@ -115,12 +162,12 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 
 		loginToAlfrescoAs("opensso1", "opensso1");
 		assertTrue(selenium.isTextPresent("opensso1"));
-		
+
 		logoutFromAlfresco();
 
 		loginToAlfrescoAs("opensso2", "opensso2");
 		assertTrue(selenium.isTextPresent("opensso2"));
-		
+
 		String email = "a@b.com";
 		changeUserEmailTo(email);
 		assertTrue(selenium.isTextPresent(email));
@@ -138,28 +185,26 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 
 		assertTrue(selenium.isTextPresent("opensso2"));
 		assertTrue(!selenium.isTextPresent("opensso1"));
-		
-		
+
 		loginToOpenSSOConsoleAsAmAdmin();
-		
+
 		createGroup("group3");
 		associateUserWithGroups("opensso2", "group3");
-		
+
 		logoutFromOpenSSODomain();
-		
+
 		loginToAlfrescoAs("opensso2", "opensso2");
-		
+
 		logoutFromOpenSSODomain();
-		
+
 		loginToAlfrescoAs("admin", "admin");
-		
-		
+
 		goToAlfrescoGroupManagmentFor("group1");
 		assertTrue(!selenium.isTextPresent("opensso2"));
-		
+
 		goToAlfrescoGroupManagmentFor("group2");
 		assertTrue(!selenium.isTextPresent("opensso2"));
-		
+
 		goToAlfrescoGroupManagmentFor("group3");
 		assertTrue(selenium.isTextPresent("opensso2"));
 	}
@@ -167,9 +212,8 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 	private void logoutFromAlfresco() {
 		selenium.click("logout");
 		selenium.waitForPageToLoad("40000");
-		
-	}
 
+	}
 
 	private void changeUserEmailTo(String email) {
 		selenium.click("//img[@alt='User Profile']");
@@ -180,7 +224,6 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		selenium.click("dialog:finish-button");
 		selenium.waitForPageToLoad("40000");
 	}
-
 
 	private void goToAlfrescoGroupManagmentFor(String group) {
 		selenium.click("//img[@alt='Administration Console']");
@@ -227,7 +270,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 			Thread.sleep(1000);
 		}
 		selenium.click("EntityMembership.addRemoveMembers.RemoveAllButton");
-		
+
 		for (int i = 0; i < groups.length; i++) {
 			selenium.type("EntityMembership.tfFilter", groups[i]);
 			selenium.click("EntityMembership.btnSearch");
@@ -310,7 +353,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		selenium.click("Login.Submit");
 		selenium.waitForPageToLoad("40000");
 	}
-	
+
 	private void clickOnLinkWithText(String label) throws InterruptedException {
 		for (int second = 0;; second++) {
 			if (second >= 60)

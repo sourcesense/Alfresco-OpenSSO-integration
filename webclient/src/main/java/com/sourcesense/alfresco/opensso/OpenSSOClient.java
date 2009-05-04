@@ -16,8 +16,6 @@
  */
 package com.sourcesense.alfresco.opensso;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -30,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 import com.iplanet.sso.SSOException;
 import com.iplanet.sso.SSOToken;
 import com.iplanet.sso.SSOTokenManager;
-import com.sun.identity.configuration.SystemProperties;
 import com.sun.identity.idm.IdRepoException;
 import com.sun.identity.idm.IdUtils;
 import com.sun.identity.shared.configuration.SystemPropertiesManager;

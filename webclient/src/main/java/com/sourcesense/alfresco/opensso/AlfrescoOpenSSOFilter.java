@@ -69,6 +69,7 @@ public class AlfrescoOpenSSOFilter implements Filter {
 		
 
 		if(isLoginRequest) {
+			httpSession.invalidate();
 			httpResponse.sendRedirect(buildURLForRedirect(request));
 		}
 		
@@ -93,7 +94,7 @@ public class AlfrescoOpenSSOFilter implements Filter {
 			}
 			List<String> groups = getOpenSSOClient().getGroups(token);
 			getAlfrescoFacade().createOrUpdateGroups(principal, groups);
-			getAlfrescoFacade().setAuthenticatedUser(httpRequest, httpSession, principal);
+			getAlfrescoFacade().setAuthenticatedUser(httpRequest,httpResponse,httpSession, principal);
 			chain.doFilter(request, response);
 		} 
 		

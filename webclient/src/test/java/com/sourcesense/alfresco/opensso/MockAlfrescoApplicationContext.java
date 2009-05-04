@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.alfresco.repo.security.authentication.AuthenticationComponent;
+import org.alfresco.repo.security.authentication.TicketComponent;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.security.AuthenticationService;
 import org.alfresco.service.cmr.security.AuthorityService;
@@ -49,6 +50,7 @@ public class MockAlfrescoApplicationContext extends GenericWebApplicationContext
 		beans.put("permissionService", PermissionService.class);
 		beans.put("authenticationService", AuthenticationService.class);
 		beans.put("authorityService", AuthorityService.class);
+		beans.put("ticketComponent", TicketComponent.class);
 	}
 
 	@Override
