@@ -2,7 +2,7 @@
 
 $ export MAVEN_OPTS="-Xms256m -Xmx512m -XX:PermSize=128m"
 
-Ensure that OpenSSO is running. Then edit file web-client/src/test/resources/AMConfig.properties, changing:
+Ensure that OpenSSO is running. Then edit file webclient/src/test/resources/AMConfig.properties, changing:
 
 com.iplanet.am.naming.url:  URL OpenSSO naming service
 com.sun.identity.agents.app.username: OpenSSO's agent username

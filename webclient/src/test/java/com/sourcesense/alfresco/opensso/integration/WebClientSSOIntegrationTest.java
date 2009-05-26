@@ -49,7 +49,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 
 	@Test
 	public void testSURFIntegration() throws Exception {
-		loginToAlfrescoAs("amAdmin","amAdmin");
+		loginToAlfrescoAs("admin","admin");
 		String token = getSSOTokenFromCookie();
 		String encodedToken = URLEncoder.encode(token);
 		String ticket = callLoginWebScript(encodedToken);
@@ -349,7 +349,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		logoutFromOpenSSODomain();
 		selenium.open("/opensso/UI/Login");
 		selenium.type("IDToken1", "amAdmin");
-		selenium.type("IDToken2", "amAdmin");
+		selenium.type("IDToken2", "12345678");
 		selenium.click("Login.Submit");
 		selenium.waitForPageToLoad("40000");
 	}

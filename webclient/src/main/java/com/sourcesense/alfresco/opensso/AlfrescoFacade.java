@@ -162,10 +162,12 @@ public class AlfrescoFacade {
 			public Object execute() {
 				Set<String> authoritiesForUser = authorityService.getAuthoritiesForUser(principal);
 				for (String authority : authoritiesForUser) {
+				     if(authority.startsWith("GROUP_")) {
 					String groupName = authority.substring("GROUP_".length());
 					if (!groups.contains(groupName) && !groupName.equals("EVERYONE")) {
 						authorityService.removeAuthority(authority, principal);
 					}
+				     }
 				}
 				for (String group : groups) {
 					String authority = "GROUP_".concat(group);
