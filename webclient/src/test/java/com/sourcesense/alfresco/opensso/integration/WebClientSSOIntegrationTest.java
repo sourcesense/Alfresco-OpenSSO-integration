@@ -16,11 +16,16 @@
  */
 package com.sourcesense.alfresco.opensso.integration;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Properties;
 
 import org.alfresco.util.URLEncoder;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
@@ -28,14 +33,17 @@ import com.meterware.httpunit.GetMethodWebRequest;
 import com.meterware.httpunit.WebConversation;
 import com.meterware.httpunit.WebRequest;
 import com.meterware.httpunit.WebResponse;
-import com.thoughtworks.selenium.SeleneseTestCase;
+import com.thoughtworks.selenium.DefaultSelenium;
+import com.thoughtworks.selenium.Selenium;
 
-public class WebClientSSOIntegrationTest extends SeleneseTestCase {
+public class WebClientSSOIntegrationTest {
 
 	private String agent_password;
 	private String agent_login;
 	private String opensso_url;
+	private Selenium selenium;
 
+	@Before
 	public void setUp() throws Exception {
 		Properties properties = new Properties();
 		properties.load(getClass().getClassLoader().getResourceAsStream("AMConfig.properties"));
@@ -44,12 +52,39 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 		String openssoNaming = (String) properties.get("com.iplanet.am.naming.url");
 		opensso_url = openssoNaming.substring(0, openssoNaming.lastIndexOf('/')).concat("/UI/Login");
 
-		setUp(opensso_url, "*firefox3");
+		selenium = new DefaultSelenium("localhost", 4444, "*firefox3", opensso_url);
+		selenium.start();
+
+	}
+
+	@After
+	public void clean() throws InterruptedException {
+		deleteUsersAndGroups();
+		selenium.stop();
+	}
+
+	public void testDisplayNonEnglishChars() throws Exception {
+		logoutFromOpenSSODomain();
+		loginToOpenSSOConsoleAsAmAdmin();
+		createUserWithLoginAndPass("opensso1");
+		logoutFromOpenSSODomain();
+		loginToAlfrescoAs("opensso1", "opensso1");
+		selenium.click("link=Create a space in your home space");
+		String i18nText = "Aviação Civil";
+		selenium.type("dialog:dialog-body:name", i18nText);
+		selenium.click("dialog:finish-button");
+		selenium.click("link=My Home");
+		assertTrue(selenium.isTextPresent(i18nText));
 	}
 
 	@Test
 	public void testSURFIntegration() throws Exception {
-		loginToAlfrescoAs("admin","admin");
+		logoutFromOpenSSODomain();
+		loginToOpenSSOConsoleAsAmAdmin();
+		createUserWithLoginAndPass("admin");
+		createUserWithLoginAndPass("opensso1");
+		logoutFromOpenSSODomain();
+		loginToAlfrescoAs("admin", "admin");
 		String token = getSSOTokenFromCookie();
 		String encodedToken = URLEncoder.encode(token);
 		String ticket = callLoginWebScript(encodedToken);
@@ -58,10 +93,10 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 	}
 
 	private String callLoginWebScript(String encodedToken) {
-		String loginWebScript = "http://localhost:8080/alfresco/s/api/login?u=amAdmin&pw=".concat(encodedToken);
+		String loginWebScript = "http://localhost:8080/alfresco/s/api/login?u=admin&pw=".concat(encodedToken);
 		WebConversation wc = new WebConversation();
-	    WebRequest req = new GetMethodWebRequest(loginWebScript);
-	    WebResponse resp;
+		WebRequest req = new GetMethodWebRequest(loginWebScript);
+		WebResponse resp;
 		try {
 			resp = wc.getResponse(req);
 			return resp.getText();
@@ -84,7 +119,7 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 				String cookieName = cookie[0].trim();
 				String cookieValue = cookie[1];
 				if (cookieName.equalsIgnoreCase("iPlanetDirectoryPro")) {
-					return cookieValue.substring(0,cookieValue.length()-1);
+					return cookieValue.substring(0, cookieValue.length() - 1);
 				}
 			}
 		}
@@ -93,10 +128,6 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 
 	@Test
 	public void testWebScriptIntegration() throws InterruptedException {
-		
-		loginToOpenSSOConsoleAsAmAdmin();
-		deleteUsersAndGroups();
-
 		logoutFromOpenSSODomain();
 		loginToOpenSSOConsoleAsAmAdmin();
 		createUserWithLoginAndPass("opensso3");
@@ -294,27 +325,35 @@ public class WebClientSSOIntegrationTest extends SeleneseTestCase {
 	}
 
 	private void deleteUsersAndGroups() throws InterruptedException {
+		loginToOpenSSOConsoleAsAmAdmin();
 		goToSubjectsPage();
 		selenium.type("Entities.tfFilter", "opensso*");
 		selenium.click("Entities.btnSearch");
 		selenium.waitForPageToLoad("40000");
-		selenium.click("Entities.tblSearch.SelectAllImage");
-		selenium.click("Entities.tblButtonDelete");
-		selenium.waitForPageToLoad("40000");
+		if(!selenium.isTextPresent("There are no entities")) {
+			selenium.click("Entities.tblSearch.SelectAllImage");
+			selenium.click("Entities.tblButtonDelete");
+			selenium.waitForPageToLoad("40000");
+		}
 		selenium.type("Entities.tfFilter", "admin");
 		selenium.click("Entities.btnSearch");
 		selenium.waitForPageToLoad("40000");
-		selenium.click("Entities.tblSearch.SelectAllImage");
-		selenium.click("Entities.tblButtonDelete");
-		selenium.waitForPageToLoad("40000");
+		if(!selenium.isTextPresent("There are no entities")) {
+			selenium.click("Entities.tblSearch.SelectAllImage");
+			selenium.click("Entities.tblButtonDelete");
+			selenium.waitForPageToLoad("40000");
+		}
+
 		selenium.click("link=Group");
 		selenium.waitForPageToLoad("40000");
 		selenium.type("Entities.tfFilter", "group*");
 		selenium.click("Entities.btnSearch");
 		selenium.waitForPageToLoad("40000");
-		selenium.click("Entities.tblSearch.SelectAllImage");
-		selenium.click("Entities.tblButtonDelete");
-		selenium.waitForPageToLoad("40000");
+		if(!selenium.isTextPresent("There are no entities")) {
+			selenium.click("Entities.tblSearch.SelectAllImage");
+			selenium.click("Entities.tblButtonDelete");
+			selenium.waitForPageToLoad("40000");
+		}
 		logoutFromOpenSSODomain();
 	}
 
