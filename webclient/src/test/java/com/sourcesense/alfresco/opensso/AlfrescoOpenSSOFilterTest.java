@@ -223,6 +223,11 @@ public class AlfrescoOpenSSOFilterTest {
 			}
 			
 			@Override
+			protected void setLocale(HttpSession session) {
+				// TODO Auto-generated method stub
+			}
+			
+			@Override
 			public void createOrUpdateGroups(String principal, List<String> openSSOGroups) {
 				groups.remove(principal);
 				groups.put(principal, openSSOGroups);

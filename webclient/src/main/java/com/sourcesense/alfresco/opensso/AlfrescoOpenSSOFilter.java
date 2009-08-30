@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.alfresco.web.app.servlet.AbstractAuthenticationFilter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -43,7 +44,7 @@ import com.iplanet.sso.SSOToken;
  * @author g.fernandes@sourcesense.com
  * 
  */
-public class AlfrescoOpenSSOFilter implements Filter {
+public class AlfrescoOpenSSOFilter extends AbstractAuthenticationFilter implements Filter {
 
 	private static Log logger = LogFactory.getLog(AlfrescoOpenSSOFilter.class);
 
@@ -54,11 +55,16 @@ public class AlfrescoOpenSSOFilter implements Filter {
 	public void destroy() {
 
 	}
+	
+	
 
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+		
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		HttpSession httpSession = httpRequest.getSession();
+		
+		request.setCharacterEncoding("UTF-8");
 		
 		SSOToken token = getOpenSSOClient().createTokenFrom(httpRequest);
 		
@@ -138,6 +144,7 @@ public class AlfrescoOpenSSOFilter implements Filter {
 
 	public void init(FilterConfig config) throws ServletException {
 		servletContext = config.getServletContext();
+		
 	}
 
 	protected String getOpenSSOLoginURL() {

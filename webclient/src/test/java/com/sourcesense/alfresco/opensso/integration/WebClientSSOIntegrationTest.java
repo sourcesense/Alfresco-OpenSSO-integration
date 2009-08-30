@@ -24,6 +24,8 @@ import java.net.MalformedURLException;
 import java.util.Properties;
 
 import org.alfresco.util.URLEncoder;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.math.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +65,7 @@ public class WebClientSSOIntegrationTest {
 		selenium.stop();
 	}
 
+	@Test
 	public void testDisplayNonEnglishChars() throws Exception {
 		logoutFromOpenSSODomain();
 		loginToOpenSSOConsoleAsAmAdmin();
@@ -70,10 +73,13 @@ public class WebClientSSOIntegrationTest {
 		logoutFromOpenSSODomain();
 		loginToAlfrescoAs("opensso1", "opensso1");
 		selenium.click("link=Create a space in your home space");
-		String i18nText = "Aviação Civil";
+		selenium.waitForPageToLoad("40000");
+		String i18nText = "Aviação Civil-".concat(RandomStringUtils.randomAlphabetic(5));
 		selenium.type("dialog:dialog-body:name", i18nText);
 		selenium.click("dialog:finish-button");
+		selenium.waitForPageToLoad("40000");
 		selenium.click("link=My Home");
+		selenium.waitForPageToLoad("40000");
 		assertTrue(selenium.isTextPresent(i18nText));
 	}
 

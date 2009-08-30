@@ -20,15 +20,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import javax.faces.context.FacesContext;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.alfresco.i18n.I18NUtil;
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.security.authentication.AuthenticationComponent;
 import org.alfresco.repo.security.authentication.TicketComponent;
@@ -42,8 +41,8 @@ import org.alfresco.service.cmr.security.PermissionService;
 import org.alfresco.service.cmr.security.PersonService;
 import org.alfresco.service.namespace.QName;
 import org.alfresco.service.transaction.TransactionService;
+import org.alfresco.web.app.Application;
 import org.alfresco.web.app.servlet.AuthenticationHelper;
-import org.alfresco.web.app.servlet.FacesHelper;
 import org.alfresco.web.bean.LoginBean;
 import org.alfresco.web.bean.repository.User;
 import org.apache.commons.lang.NotImplementedException;
@@ -75,8 +74,13 @@ public class AlfrescoFacade {
 	private TransactionalHelper transactionalHelper;
 	private AuthorityService authorityService;
 	private final ServletContext servletContext;
+	private static final String LOCALE = "locale";
+
+	public static final String MESSAGE_BUNDLE = "alfresco.messages.webclient";
 
 	private TicketComponent ticketComponent;
+
+	private List<String> m_languages;
 
 	public AlfrescoFacade(ServletContext servletContext) {
 		this.servletContext = servletContext;
@@ -92,12 +96,13 @@ public class AlfrescoFacade {
 		authorityService = (AuthorityService) ctx.getBean("authorityService");
 		transactionalHelper = new TransactionalHelper(transactionService);
 		ticketComponent = (TicketComponent) ctx.getBean("ticketComponent");
+
 	}
 
 	protected void setAuthenticatedUser(final HttpServletRequest req, final HttpServletResponse res, final HttpSession httpSess, final String userName) {
 		authenticationService.clearCurrentSecurityContext();
 		authComponent.setCurrentUser(userName);
-	    ticketComponent.clearCurrentTicket();
+		ticketComponent.clearCurrentTicket();
 		transactionalHelper.doInTransaction(new Transactionable() {
 			public Object execute() {
 				User user;
@@ -106,14 +111,15 @@ public class AlfrescoFacade {
 				homeSpaceRef = (NodeRef) nodeService.getProperty(personService.getPerson(userName), ContentModel.PROP_HOMEFOLDER);
 				user.setHomeSpaceId(homeSpaceRef.getId());
 				populateSession(httpSess, user);
-				FacesHelper.getFacesContext(req, res, servletContext);
-				FacesContext fc = FacesContext.getCurrentInstance();
-				 Map session = fc.getExternalContext().getSessionMap();
-				 session.remove(AuthenticationHelper.SESSION_INVALIDATED);
-				 
+				setLocale(httpSess);
 				return null;
 			}
 		});
+
+	}
+	
+	protected void setLocale(HttpSession session) {
+		I18NUtil.setLocale(Application.getLanguage(session));
 	}
 
 	protected void populateSession(HttpSession httpSess, User user) {
@@ -162,12 +168,12 @@ public class AlfrescoFacade {
 			public Object execute() {
 				Set<String> authoritiesForUser = authorityService.getAuthoritiesForUser(principal);
 				for (String authority : authoritiesForUser) {
-				     if(authority.startsWith("GROUP_")) {
-					String groupName = authority.substring("GROUP_".length());
-					if (!groups.contains(groupName) && !groupName.equals("EVERYONE")) {
-						authorityService.removeAuthority(authority, principal);
+					if (authority.startsWith("GROUP_")) {
+						String groupName = authority.substring("GROUP_".length());
+						if (!groups.contains(groupName) && !groupName.equals("EVERYONE")) {
+							authorityService.removeAuthority(authority, principal);
+						}
 					}
-				     }
 				}
 				for (String group : groups) {
 					String authority = "GROUP_".concat(group);
